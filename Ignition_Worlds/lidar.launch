@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="ign_args" default="../test/diff_test_lidar.sdf"/>
+  <arg name="ign_args" default="$(find P9-SLAM-RL)/Ignition_Worlds/diff_test_lidar.sdf"/>
 
 
 
