@@ -3,6 +3,24 @@
   <arg name="ign_args" default="../test/diff_test_lidar.sdf"/>
 
 
+
+
+  <node
+    pkg="tf2_ros"
+    type="static_transform_publisher" 
+    name="odem_tf"
+    output="screen"
+    args="0 0 0   0 0 0   map   vehicle_blue/odom">
+  </node>
+
+  <node
+    pkg="tf2_ros"
+    type="static_transform_publisher" 
+    name="lidar_tf"
+    output="screen"
+    args="0 0 0   0 0 0   map   vehicle_blue/lidar/gpu_lidar">
+  </node>
+
   <node
     pkg="ros_ign_gazebo"
     type="ign_gazebo"
