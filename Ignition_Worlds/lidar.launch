@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="ign_args" default="../test/diff_test_lidar.sdf"/>
+
+
+  <node
+    pkg="ros_ign_gazebo"
+    type="ign_gazebo"
+    name="ign_gazebo"
+    output="screen"
+    required="true"
+    args="$(arg ign_args)">
+  </node>
+
+  <node
+    pkg="ros_ign_bridge"
+    type="parameter_bridge"
+    name="$(anon ros_ign_bridge)"
+    output="screen"
+    args="/model/vehicle_blue/cmd_vel@geometry_msgs/Twist@ignition.msgs.Twist /model/vehicle_blue/odometry@nav_msgs/Odometry@ignition.msgs.Odometry /lidar@sensor_msgs/LaserScan@ignition.msgs.LaserScan /lidar/points@sensor_msgs/PointCloud2@ignition.msgs.PointCloudPacked">
+  </node>
+</launch>
