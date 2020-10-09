@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="ign_args" default="$(find simulations)/world/diff_test_lidar.sdf"/>
+
+
+
+
+  <node
+    pkg="tf2_ros"
+    type="static_transform_publisher" 
+    name="odem_tf"
+    output="screen"
+    args="0 0 0   0 0 0   base    vehicle_blue/odom">
+  </node>
+
+  <node
+    pkg="tf2_ros"
+    type="static_transform_publisher" 
+    name="lidar_tf"
+    output="screen"
+    args="0 0 0   0 0 0   base   vehicle_blue/lidar/gpu_lidar">
+  </node>
+
+  <node
+    pkg="ros_ign_gazebo"
+    type="ign_gazebo"
+    name="ign_gazebo"
+    output="screen"
+    required="true"
+    args="$(arg ign_args)">
+  </node>
+
+  <node
+    pkg="ros_ign_bridge"
+    type="parameter_bridge"
+    name="$(anon ros_ign_bridge)"
+    output="screen"
+    args="/cmd_vel@geometry_msgs/Twist@ignition.msgs.Twist /model/vehicle_blue/odometry@nav_msgs/Odometry@ignition.msgs.Odometry /lidar@sensor_msgs/LaserScan@ignition.msgs.LaserScan /lidar/points@sensor_msgs/PointCloud2@ignition.msgs.PointCloudPacked">
+  </node>
+
+  <node
+    type="rviz"
+    name="rviz"
+    pkg="rviz"
+    args="-d $(find simulation)/rviz/lidar2.rviz" />
+</launch>
