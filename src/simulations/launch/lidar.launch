@@ -42,5 +42,5 @@
     type="rviz"
     name="rviz"
     pkg="rviz"
-    args="-d $(find simulation)/rviz/lidar2.rviz" />
+    args="-d $(find simulations)/rviz/lidar2.rviz" />
 </launch>
