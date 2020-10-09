@@ -42,7 +42,7 @@
   <param name="use_sim_time" value="true"/>
   <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
       <remap from="scan" to="vehicle_blue/lidar/gpu_lidar"/>
-      <param name="odom_frame" value="yvehicle_blue/odom" />
+      <param name="odom_frame" value="vehicle_blue/odom" />
       <param name="base_frame" value="base_link" />
       <param name="map_update_interval" value="5.0"/>
       <param name="maxUrange" value="16.0"/>
