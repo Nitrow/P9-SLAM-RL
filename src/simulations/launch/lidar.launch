@@ -3,23 +3,24 @@
   <arg name="ign_args" default="$(find simulations)/world/diff_test_lidar.sdf"/>
 
 
+  
 
+  <node
+    pkg="odom_transform"
+    type="odom_transform" 
+    name="odom"
+    output="screen"
+    >
+  </node>
 
   <node
     pkg="tf2_ros"
     type="static_transform_publisher" 
     name="lidar_tf"
     output="screen"
-    args="0 0 0   0 0 0   base_link  vehicle_blue/lidar/gpu_lidar">
+    args="0 0 0   0 0 0   base_link vehicle_blue/lidar/gpu_lidar">
   </node>
 
-  <node
-    pkg="tf2_ros"
-    type="static_transform_publisher" 
-    name="odem_tf"
-    output="screen"
-    args="0 0 0   0 0 0   vehicle_blue/odom  base_link">
-  </node>
 
 
   <node
