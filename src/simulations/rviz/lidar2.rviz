@@ -6,7 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /LaserScan1/Status1
       Splitter Ratio: 0.5
     Tree Height: 407
   - Class: rviz/Selection
@@ -83,6 +82,27 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+        base_link:
+          Value: true
+        vehicle_blue/lidar/gpu_lidar:
+          Value: true
+      Marker Alpha: 1
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        base_link:
+          vehicle_blue/lidar/gpu_lidar:
+            {}
+      Update Interval: 0
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -147,5 +167,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1294
-  X: 72
+  X: 352
   Y: 27
