@@ -3,7 +3,10 @@
   <arg name="ign_args" default="$(find simulations)/world/diff_test_lidar.sdf"/>
 
 
+
+
   
+
 
   <node
     pkg="odom_transform"
@@ -13,15 +16,7 @@
     >
   </node>
 
-
-<!--     <node
-    pkg="tf2_ros"
-    type="static_transform_publisher" 
-    name="odom_tf"
-    output="screen"
-    args="0 0 0   0 0 0   vehicle_blue/odom base_link">
-  </node> -->
-
+ 
   
   <node
     pkg="tf2_ros"
@@ -52,10 +47,10 @@
 
   <param name="use_sim_time" value="true"/>
   <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
-      <remap from="scan" to="vehicle_blue/lidar/gpu_lidar"/>
+      <remap from="scan" to="/lidar"/>
       <param name="odom_frame" value="vehicle_blue/odom" />
       <param name="base_frame" value="base_link" />
-      <param name="map_update_interval" value="5.0"/>
+      <param name="map_update_interval" value="0.1"/>
       <param name="maxUrange" value="16.0"/>
       <param name="sigma" value="0.05"/>
       <param name="kernelSize" value="1"/>
@@ -71,7 +66,7 @@
       <param name="stt" value="0.2"/>
       <param name="linearUpdate" value="1.0"/>
       <param name="angularUpdate" value="0.5"/>
-      <param name="temporalUpdate" value="3.0"/>
+      <param name="temporalUpdate" value="0.1"/>
       <param name="resampleThreshold" value="0.5"/>
       <param name="particles" value="30"/>
       <param name="xmin" value="-50.0"/>
