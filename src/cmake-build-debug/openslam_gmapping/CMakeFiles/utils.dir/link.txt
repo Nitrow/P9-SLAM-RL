@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC -g  -shared -Wl,-soname,libutils.so -o ../devel/lib/libutils.so CMakeFiles/utils.dir/utils/stat.cpp.o CMakeFiles/utils.dir/utils/movement.cpp.o 

@@ -1,8 +1,0 @@
-prefix=/usr/local
-
-Name: odom_transform
-Description: Description of odom_transform
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 

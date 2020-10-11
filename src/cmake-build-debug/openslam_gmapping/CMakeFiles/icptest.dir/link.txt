@@ -1,1 +1,0 @@
-/usr/bin/c++  -g  -rdynamic CMakeFiles/icptest.dir/scanmatcher/icptest.cpp.o  -o ../devel/lib/openslam_gmapping/icptest  -Wl,-rpath,/home/asger/P9-SLAM-RL/src/cmake-build-debug/devel/lib: ../devel/lib/libscanmatcher.so ../devel/lib/liblog.so ../devel/lib/libsensor_range.so ../devel/lib/libsensor_odometry.so ../devel/lib/libsensor_base.so ../devel/lib/libutils.so 
