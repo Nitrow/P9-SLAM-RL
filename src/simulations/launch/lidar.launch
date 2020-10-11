@@ -51,9 +51,19 @@
     args="/cmd_vel@geometry_msgs/Twist@ignition.msgs.Twist /model/vehicle_blue/odometry@nav_msgs/Odometry@ignition.msgs.Odometry /lidar@sensor_msgs/LaserScan@ignition.msgs.LaserScan /lidar/points@sensor_msgs/PointCloud2@ignition.msgs.PointCloudPacked">
   </node>
 
+
+    <node
+    pkg="lidar_modifier"
+    type="lidar_modifier" 
+    name="lidar_modifier"
+    output="screen"
+    >
+  </node>
+
+
   <param name="use_sim_time" value="true"/>
   <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
-      <remap from="scan" to="/lidar"/>
+      <remap from="scan" to="/scan"/>
       <param name="odom_frame" value="vehicle_blue/odom" />
       <param name="base_frame" value="base_link" />
       <param name="map_update_interval" value="0.1"/>

@@ -1,0 +1,1 @@
+/usr/bin/c++  -g  -rdynamic CMakeFiles/log_test.dir/log/log_test.cpp.o  -o ../devel/lib/openslam_gmapping/log_test  -Wl,-rpath,/home/asger/P9-SLAM-RL/src/cmake-build-debug/devel/lib: ../devel/lib/liblog.so ../devel/lib/libsensor_range.so ../devel/lib/libsensor_odometry.so ../devel/lib/libsensor_base.so 
