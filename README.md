@@ -3,5 +3,9 @@
 ## Ubuntu 20.04
 ## ROS Noetic
 ----------------
+----------------
 ## Prerequisites
-### Install gmapping (sudo apt-get install ros-noetic-gmapping)
+### Install gmapping
+```bash
+sudo apt-get install ros-noetic-gmapping
+```
