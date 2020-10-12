@@ -14,7 +14,7 @@ public:
 private:
     ros::NodeHandle n;
 
-    ros::Subscriber lasersub;
+    ros::Subscriber ladersub;
     ros::Publisher lidar_pub;
     sensor_msgs::LaserScan scan_modified;
 
@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
 }
 
 lidar_modifier_class::lidar_modifier_class() {
-    lasersub = n.subscribe("/lidar", 50, &lidar_modifier_class::laser_msg_Callback, this);
+    ladersub = n.subscribe("/lidar", 50, &lidar_modifier_class::laser_msg_Callback, this);
     lidar_pub = n.advertise<sensor_msgs::LaserScan>("/scan", 50);
 
 }
