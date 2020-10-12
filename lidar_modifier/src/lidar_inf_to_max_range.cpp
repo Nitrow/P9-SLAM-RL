@@ -4,10 +4,6 @@
 #include "std_msgs/String.h"
 
 
-#define size 640
-
-
-
 class lidar_modifier_class {
 
 public:
@@ -20,74 +16,52 @@ private:
 
     ros::Subscriber lasersub;
     ros::Publisher lidar_pub;
-    void laser_msg_Callback(const sensor_msgs::LaserScan::ConstPtr &scan);
-    sensor_msgs::LaserScan scanmodi;
-    float ranges[size]{};
-    float intensities[size]{};
+    sensor_msgs::LaserScan scan_modified;
 
+    void laser_msg_Callback(const sensor_msgs::LaserScan::ConstPtr &scan);
 };
 
+void lidar_modifier_class::laser_msg_Callback(const sensor_msgs::LaserScan::ConstPtr &scan) {
 
-    void lidar_modifier_class::laser_msg_Callback(const sensor_msgs::LaserScan::ConstPtr& scan) {
+    // Create a LaserScan Message
+    scan_modified.scan_time = scan->scan_time;
+    scan_modified.header.stamp = scan->header.stamp;
+    scan_modified.header.frame_id = scan->header.frame_id;
+    scan_modified.angle_min = scan->angle_min;
+    scan_modified.angle_max = scan->angle_max;
+    scan_modified.angle_increment = scan->angle_increment;
+    scan_modified.time_increment = scan->time_increment;
+    scan_modified.range_min = scan->range_min;
+    scan_modified.range_max = scan->range_max;
 
+    scan_modified.ranges.resize(scan->ranges.size());
+    scan_modified.intensities.resize(scan->intensities.size());
+    for (int i = 0; i < scan->ranges.size(); ++i) {
 
-        for (int i = 0; i < size; ++i) {
-
-            if (scan->ranges[i] < scan->range_max) {
-                ranges[i] = scan->ranges[i];
-
-            }
-            else {
-                ranges[i] = scan->range_max;
-            }
-
-            intensities[i] = scan->intensities[i];
-
+        if (scan->ranges[i] < scan->range_max) {
+            scan_modified.ranges[i] = scan->ranges[i];
+        } else {
+            scan_modified.ranges[i] = scan->range_max;
         }
-
-        ros::Time scan_time = ros::Time::now();
-
-        // Create a LaserScan Message
-        scanmodi.scan_time = scan->scan_time;
-        scanmodi.header.stamp = scan->header.stamp;
-        scanmodi.header.frame_id = scan->header.frame_id;
-        scanmodi.angle_min = scan->angle_min;
-        scanmodi.angle_max = scan->angle_max;
-        scanmodi.angle_increment = scan->angle_increment;
-        scanmodi.time_increment = scan->time_increment;
-        scanmodi.range_min = scan->range_min;
-        scanmodi.range_max = scan->range_max;
-
-        scanmodi.ranges.resize(size);
-        scanmodi.intensities.resize(size);
-        for(int i = 0; i < 640; ++i){
-            scanmodi.ranges[i] = ranges[i];
-            scanmodi.intensities[i] = intensities[i];
-        }
-        lidar_pub.publish(scanmodi);
+        scan_modified.intensities[i] = scan->intensities[i];
+    }
+    lidar_pub.publish(scan_modified);
 }
 
-
-
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 
     ros::init(argc, argv, "sick_modifier");
 
     lidar_modifier_class lidar_modifier_class;
 
     ros::spin();
-
-
     return 0;
-
 }
 
-    lidar_modifier_class::lidar_modifier_class()
-    {
-        lasersub = n.subscribe("/lidar", 50, &lidar_modifier_class::laser_msg_Callback, this);
-        lidar_pub = n.advertise<sensor_msgs::LaserScan>("/scan",50);
+lidar_modifier_class::lidar_modifier_class() {
+    lasersub = n.subscribe("/lidar", 50, &lidar_modifier_class::laser_msg_Callback, this);
+    lidar_pub = n.advertise<sensor_msgs::LaserScan>("/scan", 50);
 
-    }
+}
 
 lidar_modifier_class::~lidar_modifier_class() = default;
