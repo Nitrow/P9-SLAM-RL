@@ -38,7 +38,7 @@ void lidar_modifier_class::laser_msg_Callback(const sensor_msgs::LaserScan::Cons
     scan_modified.intensities.resize(scan->intensities.size());
     for (int i = 0; i < scan->ranges.size(); ++i) {
 
-        if (scan->ranges[i] < scan->range_max) {
+        if (scan->ranges[i] <= scan->range_max) {
             scan_modified.ranges[i] = scan->ranges[i];
         } else {
             scan_modified.ranges[i] = scan->range_max;

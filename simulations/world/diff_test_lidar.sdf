@@ -82,7 +82,7 @@
     </model>
 
     <model name="box">
-      <pose>3 0 0.5 0 0 0</pose>
+      <pose>5 0 0.5 0 0 0</pose>
       <link name="body">
         <collision name="collision1">
           <geometry>
@@ -122,7 +122,7 @@
     </model>
 
     <model name="box2">
-      <pose>0 3 0.5 0 0 0</pose>
+      <pose>0 6 0.5 0 0 0</pose>
       <link name="body">
         <collision name="collision1">
           <geometry>
@@ -162,7 +162,7 @@
     </model>
 
     <model name='vehicle_blue'>
-      <pose>0 0  0.325 0 -0 0</pose>
+      <pose>0 0  0.5 0 -0 0</pose>
 
       <link name='chassis'>
         <pose>-0.151427 -0 0.175 0 -0 0</pose>
@@ -304,7 +304,7 @@
 
 
       <link name='lidar'>
-        <pose>-0.151427 -0 0.5 0 -0 0</pose>
+        <pose>0 -0 0.5 0 -0 0</pose>
         <inertial>
           <mass>1.14395</mass>
           <inertia>
