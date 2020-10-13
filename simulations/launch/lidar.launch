@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="ign_args" default="$(find simulations)/world/diff_test_lidar.sdf"/>
+  <arg name="ign_args" default="$(find simulations)/world/empty_wall_world.sdf"/>
 
 
 
@@ -18,7 +18,6 @@
     pkg="odom_transform"
     type="odom_transform" 
     name="odom"
-    output="screen"
     >
   </node>
 
@@ -28,7 +27,6 @@
     pkg="tf2_ros"
     type="static_transform_publisher" 
     name="lidar_tf"
-    output="screen"
     args="-0.15   0 0.45   0 0 0   base_link vehicle_blue/lidar/gpu_lidar">
   </node>
 
@@ -38,7 +36,6 @@
     pkg="ros_ign_gazebo"
     type="ign_gazebo"
     name="ign_gazebo"
-    output="screen"
     required="true"
     args="$(arg ign_args)">
   </node>
@@ -47,24 +44,34 @@
     pkg="ros_ign_bridge"
     type="parameter_bridge"
     name="$(anon ros_ign_bridge)"
-    output="screen"
     args="/model/vehicle_blue/cmd_vel@geometry_msgs/Twist@ignition.msgs.Twist /model/vehicle_blue/odometry@nav_msgs/Odometry@ignition.msgs.Odometry /lidar@sensor_msgs/LaserScan@ignition.msgs.LaserScan /lidar/points@sensor_msgs/PointCloud2@ignition.msgs.PointCloudPacked /world/diff_drive/clock@rosgraph_msgs/Clock@ignition.msgs.Clock">
   </node>
 
 
-    <node
+<!--     <node
     pkg="lidar_modifier"
     type="lidar_modifier" 
     name="lidar_modifier"
+    >
+  </node> -->
+
+  
+  <node
+    pkg="teleop_twist_keyboard"
+    type="teleop_twist_keyboard.py" 
+    name="teleop"
     output="screen"
     >
+    <remap from="cmd_vel" to= "/model/vehicle_blue/cmd_vel"/>
   </node>
+
+
 
 
   <param name="use_sim_time" value="true"/>
   <remap from="clock" to="/world/diff_drive/clock"/>
-  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
-      <remap from="scan" to="/scan"/>
+  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping">
+      <remap from="scan" to="/lidar"/>
       <param name="odom_frame" value="vehicle_blue/odom" />
       <param name="base_frame" value="base_link" />
       <param name="map_update_interval" value="0.1"/>
