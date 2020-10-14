@@ -25,7 +25,7 @@ class P9RLEnv(gym.Env):
 
         self.action_space = spaces.Box(low=np.array([0, -self.maxAngSpeed]),
                                        high=np.array([self.maxLinSpeed, self.maxAngSpeed]), dtype=np.float16)
-        self.observation_space = spaces.Box(low=-1, high=100, shape=(100000,), dtype=np.int8)
+        self.observation_space = spaces.MultiDiscrete([(0, 1000), (0, 1000)])
         rospy.spin()
 
     def callback(self, data):
