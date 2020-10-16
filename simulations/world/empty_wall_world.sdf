@@ -8,6 +8,8 @@
     ign topic -e -t /model/vehicle_blue/odometry
     ign topic -e -t /model/vehicle_green/odometry
 -->
+
+
 <sdf version="1.6">
   <world name="diff_drive">
 
@@ -15,11 +17,17 @@
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1.0</real_time_factor>
     </physics>
-    <plugin filename="libignition-gazebo-physics-system.so" name="ignition::gazebo::systems::Physics">
+ 
+<!--  DOESN'T WORK, DOESN'T PUBLISH ODOMETRY FOR SOME REASON!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     <plugin filename="libignition-gazebo-physics-system.so" name="ignition::gazebo::systems::Physics">
       <engine>
         <filename>ignition-physics-tpe-plugin</filename>
       </engine>
-    </plugin>
+    </plugin> -->
+
+      <plugin 
+        name='ignition::gazebo::systems::Physics' 
+        filename='ignition-gazebo-physics-system'/>
     <plugin
       filename="ignition-gazebo-user-commands-system"
       name="ignition::gazebo::systems::UserCommands">
