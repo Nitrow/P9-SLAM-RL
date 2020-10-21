@@ -1,4 +1,3 @@
-?xml version="1.0"?>
 <launch>
 
   <arg name="world" default="$(find simulations)/world/empty_wall_world_test"/>
@@ -16,7 +15,7 @@
     type="create"
     name="$(anon ros_ign_create_robot)"
     output="screen"
-    args="-world $(arg world) -file $(find simulations)/models/boxbot.sdf -name spawned -allow_renaming true -z 10 -y 0 -x 0">
+    args="-world diff_drive -file $(find simulations)/models/boxbot.sdf -name spawned -allow_renaming true -z 0 -y 0 -x 0">
   </node>
   
 </launch>

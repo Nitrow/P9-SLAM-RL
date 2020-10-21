@@ -1,5 +1,5 @@
 import rospy
-
+import time
 import gym
 from gym import spaces
 import numpy as np
@@ -11,6 +11,7 @@ stepper = rospy.ServiceProxy('stepper', StepFunction)
 
 
 stepper(1)
+
+time.sleep(2)
 stepper(1)
-stepper(1)
-stepper(1)
+
