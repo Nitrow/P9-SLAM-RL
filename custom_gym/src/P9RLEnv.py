@@ -4,8 +4,9 @@ import rospy
 import gym
 from gym import spaces
 import numpy as np
-import
+import hello_ext
 
+print(hello_ext.greet())
 
 
 from nav_msgs.msg import OccupancyGrid
