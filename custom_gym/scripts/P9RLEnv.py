@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
+import roslib; roslib.load_manifest('custom_gym')
 import os
 import rospy
 import gym
 from gym import spaces
 import numpy as np
-import hello_ext
-
-print(hello_ext.greet())
+from custom_gym.srv import *
 
 
 from nav_msgs.msg import OccupancyGrid
@@ -21,6 +20,7 @@ class P9RLEnv(gym.Env):
         self.pubAction = Twist()
         self.action = []
         self.pub = rospy.Publisher('action', Twist, queue_size=10)
+        self.stepper = rospy.ServiceProxy('stepper', StepFunction)
         self.maxAngSpeed = 1
         self.maxLinSpeed = 1
 
@@ -40,9 +40,11 @@ class P9RLEnv(gym.Env):
         self.pubAction.angular.z = self.action[1]
         self.pub.publish(self.pubAction)
 
-        os.system("ign service -r -i -s /world/diff_drive/control --reqtype ignition.msgs.WorldControl --reptype "
-                  "ignition.msgs.Boolean --timeout 1000 --req 'pause: true, multi_step: 1'")
 
+        #os.system("ign service -r -i -s /world/diff_drive/control --reqtype ignition.msgs.WorldControl --reptype "
+        #          "ignition.msgs.Boolean --timeout 1000 --req 'pause: true, multi_step: 1'")
+
+        self.stepper(1)
 
         data = None
         data2 = None
