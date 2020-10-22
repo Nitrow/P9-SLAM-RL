@@ -14,8 +14,8 @@
   <world name="diff_drive">
 
     <physics name="1ms" type="ignored">
-      <max_step_size>0.001</max_step_size>
-      <real_time_factor>1.0</real_time_factor>
+      <max_step_size>0.064</max_step_size>
+      <real_time_factor>0</real_time_factor>
     </physics>
  
 <!--  DOESN'T WORK, DOESN'T PUBLISH ODOMETRY FOR SOME REASON!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -457,11 +457,11 @@
         </visual>
         <sensor name='gpu_lidar' type='gpu_lidar'>
           <topic>lidar</topic>
-          <update_rate>100</update_rate>
+          <update_rate>20</update_rate>
           <lidar>
             <scan>
               <horizontal>
-                <samples>640</samples>
+                <samples>100</samples>
                 <resolution>1</resolution>
                 <min_angle>-3.14</min_angle>
                 <max_angle>3.14</max_angle>

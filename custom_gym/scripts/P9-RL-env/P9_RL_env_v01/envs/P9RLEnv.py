@@ -36,14 +36,13 @@ class P9RLEnv(gym.Env):
         return np.asarray(self.state)
 
     def step(self, action):
-        self.pubAction.linear.x = 1
-        self.pubAction.angular.z = 1
+        self.pubAction.linear.x = action[0]
+        self.pubAction.angular.z = action[1]
         self.pub.publish(self.pubAction)
 
 
         #os.system("ign service -r -i -s /world/diff_drive/control --reqtype ignition.msgs.WorldControl --reptype "
         #          "ignition.msgs.Boolean --timeout 1000 --req 'pause: true, multi_step: 1'")
-
 
         self.stepper(1)
 
