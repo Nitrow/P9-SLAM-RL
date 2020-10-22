@@ -7,8 +7,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
 from stable_baselines3.common.env_util import make_vec_env
 
-
-env = gym.make('P9_RL-v0')
+env = make_vec_env('P9_RL-v0', n_envs=2)
 
 
 model = PPO(MlpPolicy, env, verbose=0, gamma=0.99)

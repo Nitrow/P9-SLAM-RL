@@ -56,14 +56,6 @@
   </node> -->
 
   
-  <node
-    pkg="teleop_twist_keyboard"
-    type="teleop_twist_keyboard.py" 
-    name="teleop"
-    output="screen"
-    >
-    <remap from="cmd_vel" to= "/model/vehicle_blue/cmd_vel"/>
-  </node>
 
 
 
