@@ -20,24 +20,24 @@ class P9RLEnv(gym.Env):
         self.data2 = []
         self.action = []
         self.pub = rospy.Publisher('/model/vehicle_blue/cmd_vel', Twist, queue_size=10)
-        #rospy.wait_for_service('/stepper')
-        #self.stepper = rospy.ServiceProxy('/stepper', StepFunction, persistent=True)
+        rospy.wait_for_service('/stepper')
+        self.stepper = rospy.ServiceProxy('/stepper', StepFunction, persistent=True)
         self.maxAngSpeed = 1
         self.maxLinSpeed = 1
 
         self.action_space = spaces.Box(low=np.array([0, -self.maxAngSpeed]),
                                        high=np.array([self.maxLinSpeed, self.maxAngSpeed]), dtype=np.float16)
-        self.observation_space = spaces.Box(low=-1, high=100, shape=(4,), dtype=np.int8)
-        rospy.spin()
+        self.observation_space = spaces.Box(low=-1, high=100, shape=(466944,), dtype=np.int8)
 
     def reset(self):
         # RESET ENVIRONMENT
-        self.state = [1,1]
+        data = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
+        self.state = data.data
         return np.asarray(self.state)
 
     def step(self, action):
-        self.pubAction.linear.x = 100
-        self.pubAction.angular.z = 100
+        self.pubAction.linear.x = 1
+        self.pubAction.angular.z = 1
         self.pub.publish(self.pubAction)
 
 
@@ -45,30 +45,32 @@ class P9RLEnv(gym.Env):
         #          "ignition.msgs.Boolean --timeout 1000 --req 'pause: true, multi_step: 1'")
 
 
+        self.stepper(1)
 
-
-        #self.data = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
+        self.data = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
         #self.data2 = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
 
 
         # Get reward
-        self.state, done = self.setStateAndDone(self.data, self.data2)
-        reward = self.setReward(self.state, done)
-
-        return [np.asarray(self.state), reward, done, {}]
+        state, done = self.setStateAndDone(self.data, self.data2)
+        reward = self.setReward(state, done)
+        return [np.asarray(state), reward, done, {}]
 
     def setReward(self, state, done):
         #reward = np.sum(a=state, axis=0, dtype=np.int8)
         self.reward += -1
         if done:
-            self.reward += 10000000000
+            self.reward += 1000
         return self.reward
 
     def render(self, mode='human'):
         pass
 
     def setStateAndDone(self, data, data2):
-        state = data, data2
+
+
+        print(np.asarray(data.data))
+        state = np.asarray(data.data)
         done = False
         # Set state and done
         return state, done
