@@ -12,6 +12,6 @@ env = make_vec_env('P9_RL-v0', n_envs=1)
 
 model = PPO(MlpPolicy, env, verbose=1, gamma=0.99, tensorboard_log='/tensorBoard')
 #model = PPO1.load(simLogPath +'models/'+ simRunID, env,  verbose=0, tensorboard_log=tensorBoard/)
-model.learn(total_timesteps=100000, log_interval=0)
+model.learn(total_timesteps=100000, log_interval=1)
 print('Training finished...')
 print('Model saved...')

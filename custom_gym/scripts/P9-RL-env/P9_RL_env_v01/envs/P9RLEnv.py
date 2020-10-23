@@ -27,18 +27,25 @@ class P9RLEnv(gym.Env):
 
         self.action_space = spaces.Box(low=np.array([0, -self.maxAngSpeed]),
                                        high=np.array([self.maxLinSpeed, self.maxAngSpeed]), dtype=np.float16)
-        self.observation_space = spaces.Box(low=-1, high=100, shape=(147456,), dtype=np.float16)
+        self.observation_space = spaces.Box(low=-1, high=100, shape=(16,), dtype=np.float16)
 
     def reset(self):
         # RESET ENVIRONMENT
 
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
-       # scan = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
+        # scan = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
 
+        zoneValue = []
+        arr = np.asarray(gmap.data)
 
-        state = gmap.data
-        print(state)
-        return np.asarray(state)
+        chunks = np.array_split(arr, 16)
+
+        for x in range(16):
+            zoneValue.append(np.sum(a=chunks[x], axis=0, dtype=np.int8))
+
+        print(zoneValue)
+        state = zoneValue
+        return state
 
     def step(self, action):
         self.pubAction.linear.x = action[0]
@@ -48,7 +55,7 @@ class P9RLEnv(gym.Env):
         self.stepper(1)
 
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
-        #scan = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
+        # scan = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
 
         state, done = self.setStateAndDone(gmap, 0)
         print(state)
@@ -86,6 +93,17 @@ class P9RLEnv(gym.Env):
 
         done = False
 
-        state = gmap.data
+        # DIVIDE STATE INTO ZONES????????
+        zoneValue = []
+        arr = np.asarray(gmap.data)
+
+        chunks = np.array_split(arr, 16)
+
+        for x in range(16):
+            zoneValue.append(np.sum(a=chunks[x], axis=0, dtype=np.int8))
+
+
+        print(zoneValue)
+        state = zoneValue
 
         return state, done
