@@ -32,8 +32,9 @@ class P9RLEnv(gym.Env):
     def reset(self):
         # RESET ENVIRONMENT
         data = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
-        self.state = data.data
-        return np.asarray(self.state)
+        data2 = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
+        state = [data.data, data2.ranges]
+        return np.asarray(state)
 
     def step(self, action):
         self.pubAction.linear.x = action[0]
@@ -47,7 +48,7 @@ class P9RLEnv(gym.Env):
         self.stepper(1)
 
         self.data = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
-        #self.data2 = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
+        self.data2 = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
 
 
         # Get reward
@@ -56,7 +57,7 @@ class P9RLEnv(gym.Env):
         return [np.asarray(state), reward, done, {}]
 
     def setReward(self, state, done):
-        #reward = np.sum(a=state, axis=0, dtype=np.int8)
+        self.reward = np.sum(a=self.data.data, axis=0, dtype=np.int8)
         self.reward += -1
         if done:
             self.reward += 1000
@@ -66,10 +67,7 @@ class P9RLEnv(gym.Env):
         pass
 
     def setStateAndDone(self, data, data2):
-
-
-        print(np.asarray(data.data))
-        state = np.asarray(data.data)
+        state = [np.asarray(data.data), np.asarray(data2.ranges)]
         done = False
         # Set state and done
         return state, done

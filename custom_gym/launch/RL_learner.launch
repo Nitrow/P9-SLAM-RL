@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<launch>
+
+
+
+
+  <node
+    pkg="custom_gym"
+    type="custom_gym" 
+    name="stepservice"
+    >
+  </node>
+
+
+  <node
+    pkg="custom_gym"
+    type="master.py" 
+    name="RL_environment"
+    >
+  </node>
+ 
+
+</launch>
