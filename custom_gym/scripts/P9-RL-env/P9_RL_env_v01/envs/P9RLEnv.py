@@ -22,18 +22,22 @@ class P9RLEnv(gym.Env):
         self.pub = rospy.Publisher('/model/vehicle_blue/cmd_vel', Twist, queue_size=10)
         rospy.wait_for_service('/stepper')
         self.stepper = rospy.ServiceProxy('/stepper', StepFunction, persistent=True)
-        self.maxAngSpeed = 1
-        self.maxLinSpeed = 1
+        self.maxAngSpeed = 0.5
+        self.maxLinSpeed = 0.5
 
         self.action_space = spaces.Box(low=np.array([0, -self.maxAngSpeed]),
                                        high=np.array([self.maxLinSpeed, self.maxAngSpeed]), dtype=np.float16)
-        self.observation_space = spaces.Box(low=-1, high=100, shape=(466944,), dtype=np.int8)
+        self.observation_space = spaces.Box(low=-1, high=100, shape=(147456,), dtype=np.float16)
 
     def reset(self):
         # RESET ENVIRONMENT
-        data = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
-        data2 = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
-        state = [data.data, data2.ranges]
+
+        gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
+       # scan = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
+
+
+        state = gmap.data
+        print(state)
         return np.asarray(state)
 
     def step(self, action):
@@ -41,23 +45,18 @@ class P9RLEnv(gym.Env):
         self.pubAction.angular.z = action[1]
         self.pub.publish(self.pubAction)
 
-
-        #os.system("ign service -r -i -s /world/diff_drive/control --reqtype ignition.msgs.WorldControl --reptype "
-        #          "ignition.msgs.Boolean --timeout 1000 --req 'pause: true, multi_step: 1'")
-
         self.stepper(1)
 
-        self.data = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
-        self.data2 = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
+        gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
+        scan = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
 
-
-        # Get reward
-        state, done = self.setStateAndDone(self.data, self.data2)
+        state, done = self.setStateAndDone(gmap, scan)
+        print(state)
         reward = self.setReward(state, done)
-        return [np.asarray(state), reward, done, {}]
+        return [state, reward, done, {}]
 
     def setReward(self, state, done):
-        self.reward = np.sum(a=self.data.data, axis=0, dtype=np.int8)
+        self.reward = np.sum(a=state, axis=0, dtype=np.int8)
         self.reward += -1
         if done:
             self.reward += 1000
@@ -66,8 +65,25 @@ class P9RLEnv(gym.Env):
     def render(self, mode='human'):
         pass
 
-    def setStateAndDone(self, data, data2):
-        state = [np.asarray(data.data), np.asarray(data2.ranges)]
-        done = False
+    def setStateAndDone(self, gmap, scan):
+
+        scan_range = []
+
+        for i in range(len(scan.ranges)):
+            if scan.ranges[i] == float('Inf'):
+                scan_range.append(10)
+            elif np.isnan(scan.ranges[i]):
+                scan_range.append(0)
+            else:
+                scan_range.append(scan.ranges[i])
+
+        minScan = min(list(filter(lambda a: a != 0, scan_range[:])))
+        if minScan < 0.2:
+            done = True
+        else:
+            done = False
         # Set state and done
+
+        state = gmap.data
+
         return state, done

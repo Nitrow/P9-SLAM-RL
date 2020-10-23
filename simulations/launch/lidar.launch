@@ -2,7 +2,7 @@
 <launch>
   <arg name="ign_args" default="$(find simulations)/world/empty_wall_world.sdf"/>
 
-
+ <param name="use_sim_time" value="true"/>
 
  <!--  <node
     pkg="tf2_ros"
@@ -60,14 +60,14 @@
 
 
 
-  <param name="use_sim_time" value="true"/>
+
   <remap from="clock" to="/world/diff_drive/clock"/>
   <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping">
       <remap from="scan" to="/lidar"/>
       <param name="odom_frame" value="vehicle_blue/odom" />
       <param name="base_frame" value="base_link" />
       <param name="map_update_interval" value="0.1"/>
-      <param name="maxUrange" value="8.0"/>
+      <param name="maxUrange" value="3.5"/>
       <param name="sigma" value="0.05"/>
       <param name="kernelSize" value="1"/>
       <param name="lstep" value="0.05"/>
@@ -85,16 +85,16 @@
       <param name="temporalUpdate" value="0.1"/>
       <param name="resampleThreshold" value="0.5"/>
       <param name="particles" value="30"/>
-      <param name="xmin" value="0"/>
-      <param name="ymin" value="0"/>
-      <param name="xmax" value="0"/>
-      <param name="ymax" value="0"/>
+      <param name="xmin" value="-10"/>
+      <param name="ymin" value="-10"/>
+      <param name="xmax" value="10"/>
+      <param name="ymax" value="10"/>
       <param name="delta" value="0.05"/>
       <param name="llsamplerange" value="0.01"/>
       <param name="llsamplestep" value="0.01"/>
       <param name="lasamplerange" value="0.005"/>
       <param name="lasamplestep" value="0.005"/>
-      <param name="maxRange" value="11"/>
+      <param name="maxRange" value="4"/>
     </node>
 
 

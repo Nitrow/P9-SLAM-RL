@@ -15,7 +15,7 @@
 
     <physics name="1ms" type="ignored">
       <max_step_size>0.064</max_step_size>
-      <real_time_factor>0</real_time_factor>
+      <real_time_factor>1</real_time_factor>
     </physics>
  
 <!--  DOESN'T WORK, DOESN'T PUBLISH ODOMETRY FOR SOME REASON!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -457,14 +457,14 @@
         </visual>
         <sensor name='gpu_lidar' type='gpu_lidar'>
           <topic>lidar</topic>
-          <update_rate>20</update_rate>
+          <update_rate>100</update_rate>
           <lidar>
             <scan>
               <horizontal>
                 <samples>100</samples>
                 <resolution>1</resolution>
-                <min_angle>-3.14</min_angle>
-                <max_angle>3.14</max_angle>
+                <min_angle>-3.13</min_angle>
+                <max_angle>3.13</max_angle>
               </horizontal>
               <vertical>
                 <samples>1</samples>
@@ -475,7 +475,7 @@
             </scan>
             <range>
               <min>0.08</min>
-              <max>10.0</max>
+              <max>3.5</max>
               <resolution>0.01</resolution>
             </range>
           </lidar>
@@ -534,7 +534,7 @@
         <right_joint>right_wheel_joint</right_joint>
         <wheel_separation>0.450058</wheel_separation>
         <wheel_radius>0.1</wheel_radius>
-        <odom_publish_frequency>100</odom_publish_frequency>
+        <odom_publish_frequency>20</odom_publish_frequency>
       </plugin>
 
     </model>
