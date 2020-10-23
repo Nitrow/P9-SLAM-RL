@@ -35,16 +35,7 @@ class P9RLEnv(gym.Env):
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
         # scan = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
 
-        zoneValue = []
-        arr = np.asarray(gmap.data)
-
-        chunks = np.array_split(arr, 16)
-
-        for x in range(16):
-            zoneValue.append(np.sum(a=chunks[x], axis=0, dtype=np.int8))
-
-        print(zoneValue)
-        state = zoneValue
+        state = self.splitZones(gmap)
         return state
 
     def step(self, action):
@@ -58,7 +49,6 @@ class P9RLEnv(gym.Env):
         # scan = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
 
         state, done = self.setStateAndDone(gmap, 0)
-        print(state)
         reward = self.setReward(state, done)
         return [state, reward, done, {}]
 
@@ -94,6 +84,11 @@ class P9RLEnv(gym.Env):
         done = False
 
         # DIVIDE STATE INTO ZONES????????
+        state = self.splitZones(gmap)
+
+        return state, done
+
+    def splitZones(self, gmap):
         zoneValue = []
         arr = np.asarray(gmap.data)
 
@@ -102,8 +97,7 @@ class P9RLEnv(gym.Env):
         for x in range(16):
             zoneValue.append(np.sum(a=chunks[x], axis=0, dtype=np.int8))
 
-
-        print(zoneValue)
         state = zoneValue
+        return state
 
-        return state, done
+
