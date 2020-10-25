@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="ign_args" default="$(find simulations)/world/empty_wall_world.sdf"/>
+  <arg name="ign_args" default="$(find simulations)/world/box_wall_world.sdf"/>
 
  <param name="use_sim_time" value="true"/>
 
@@ -67,6 +67,7 @@
       <param name="odom_frame" value="vehicle_blue/odom" />
       <param name="base_frame" value="base_link" />
       <param name="map_update_interval" value="0.1"/>
+      <param name="throttle_scans" value="3"/>
       <param name="maxUrange" value="3.5"/>
       <param name="sigma" value="0.05"/>
       <param name="kernelSize" value="1"/>
@@ -85,16 +86,17 @@
       <param name="temporalUpdate" value="0.1"/>
       <param name="resampleThreshold" value="0.5"/>
       <param name="particles" value="30"/>
-      <param name="xmin" value="-10"/>
-      <param name="ymin" value="-10"/>
-      <param name="xmax" value="10"/>
-      <param name="ymax" value="10"/>
+      <param name="xmin" value="-20"/>
+      <param name="ymin" value="-20"/>
+      <param name="xmax" value="20"/>
+      <param name="ymax" value="20"/>
       <param name="delta" value="0.05"/>
       <param name="llsamplerange" value="0.01"/>
       <param name="llsamplestep" value="0.01"/>
       <param name="lasamplerange" value="0.005"/>
       <param name="lasamplestep" value="0.005"/>
-      <param name="maxRange" value="4"/>
+      <param name="transform_publish_period" value="0.5"/>
+
     </node>
 
 

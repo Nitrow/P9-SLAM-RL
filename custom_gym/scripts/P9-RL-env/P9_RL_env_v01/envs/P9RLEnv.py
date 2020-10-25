@@ -15,7 +15,7 @@ def scanRange(scan):
     scan_range = []
     for i in range(len(scan.ranges)):
         if scan.ranges[i] == float('Inf'):
-            scan_range.append(3.5)
+            scan_range.append(5)
         elif np.isnan(scan.ranges[i]):
             scan_range.append(0)
         else:
@@ -57,8 +57,8 @@ class P9RLEnv(gym.Env):
         self.pub = rospy.Publisher('/model/vehicle_blue/cmd_vel', Twist, queue_size=10)
         rospy.wait_for_service('/stepper')
         self.stepper = rospy.ServiceProxy('/stepper', StepFunction, persistent=True)
-        self.maxAngSpeed = 0.5
-        self.maxLinSpeed = 0.5
+        self.maxAngSpeed = 0.2
+        self.maxLinSpeed = 0.1
 
         self.action_space = spaces.Box(low=np.array([0, -self.maxAngSpeed]),
                                        high=np.array([self.maxLinSpeed, self.maxAngSpeed]), dtype=np.float16)
