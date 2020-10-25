@@ -55,6 +55,8 @@ class P9RLEnv(gym.Env):
         self.pubAction.angular.z = action[1]
         self.pub.publish(self.pubAction)
 
+        # self.stepper(1)
+
         scan = None
         while scan is None:
             try:
@@ -85,7 +87,8 @@ class P9RLEnv(gym.Env):
         done = False
         self.getPose()
         self.scan_range, minScan = self.scanRange(scan)
-
+        if minScan < self.safetyLimit:
+            done = True
         # DIVIDE STATE INTO ZONES????????
         state = self.splitZones(gmap) + self.scan_range + self.position + self.quaternion
 
