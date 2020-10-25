@@ -4,12 +4,38 @@ from gym import spaces
 import numpy as np
 from custom_gym.srv import StepFunction
 from tf import TransformListener
-import time
 
-from tf2_msgs.msg import TFMessage
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
+
+
+def scanRange(scan):
+    #
+    scan_range = []
+    for i in range(len(scan.ranges)):
+        if scan.ranges[i] == float('Inf'):
+            scan_range.append(3.5)
+        elif np.isnan(scan.ranges[i]):
+            scan_range.append(0)
+        else:
+            scan_range.append(scan.ranges[i])
+
+    minScan = min(list(filter(lambda a: a != 0, scan_range[:])))
+    return scan_range, minScan
+
+
+def splitZones(gmap):
+
+    zoneValue = []
+    arr = np.asarray(gmap.data)
+    chunks = np.array_split(arr, 16)
+
+    for x in range(16):
+        zoneValue.append(np.sum(a=chunks[x], axis=0, dtype=np.int8))
+
+    state = zoneValue
+    return state
 
 
 class P9RLEnv(gym.Env):
@@ -45,9 +71,9 @@ class P9RLEnv(gym.Env):
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
 
         self.getPose()
-        self.scan_range, minScan = self.scanRange(scan)
+        self.scan_range, minScan = scanRange(scan)
 
-        state = self.splitZones(gmap) + self.scan_range + self.position + self.quaternion
+        state = splitZones(gmap) + self.scan_range + self.position + self.quaternion
         return state
 
     def step(self, action):
@@ -86,45 +112,19 @@ class P9RLEnv(gym.Env):
 
         done = False
         self.getPose()
-        self.scan_range, minScan = self.scanRange(scan)
+        self.scan_range, minScan = scanRange(scan)
         if minScan < self.safetyLimit:
             done = True
         # DIVIDE STATE INTO ZONES????????
-        state = self.splitZones(gmap) + self.scan_range + self.position + self.quaternion
+        state = splitZones(gmap) + self.scan_range + self.position + self.quaternion
 
         return state, done
-
-    def splitZones(self, gmap):
-        zoneValue = []
-        arr = np.asarray(gmap.data)
-
-        chunks = np.array_split(arr, 16)
-
-        for x in range(16):
-            zoneValue.append(np.sum(a=chunks[x], axis=0, dtype=np.int8))
-
-        state = zoneValue
-        return state
 
     def getPose(self):
         if self.tf.frameExists("base_link") and self.tf.frameExists("vehicle_blue/odom"):
             t = self.tf.getLatestCommonTime("base_link", "vehicle_blue/odom")
             self.position, self.quaternion = self.tf.lookupTransform("base_link", "vehicle_blue/odom", t)
         return self.position, self.quaternion
-
-    def scanRange(self, scan):
-        #
-        scan_range = []
-        for i in range(len(scan.ranges)):
-            if scan.ranges[i] == float('Inf'):
-                scan_range.append(3.5)
-            elif np.isnan(scan.ranges[i]):
-                scan_range.append(0)
-            else:
-                scan_range.append(scan.ranges[i])
-
-        minScan = min(list(filter(lambda a: a != 0, scan_range[:])))
-        return scan_range, minScan
 
     def rewardObstacleProximity(self):
 
