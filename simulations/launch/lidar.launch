@@ -44,16 +44,16 @@
     pkg="ros_ign_bridge"
     type="parameter_bridge"
     name="$(anon ros_ign_bridge)"
-    args="/model/vehicle_blue/cmd_vel@geometry_msgs/Twist@ignition.msgs.Twist /model/vehicle_blue/odometry@nav_msgs/Odometry@ignition.msgs.Odometry /lidar@sensor_msgs/LaserScan@ignition.msgs.LaserScan /lidar/points@sensor_msgs/PointCloud2@ignition.msgs.PointCloudPacked /world/diff_drive/clock@rosgraph_msgs/Clock@ignition.msgs.Clock">
+    args="/model/vehicle_blue/cmd_vel@geometry_msgs/Twist]ignition.msgs.Twist /model/vehicle_blue/odometry@nav_msgs/Odometry[ignition.msgs.Odometry /lidar@sensor_msgs/LaserScan[ignition.msgs.LaserScan /world/diff_drive/clock@rosgraph_msgs/Clock[ignition.msgs.Clock">
   </node>
 
 
-<!--     <node
+     <node
     pkg="lidar_modifier"
     type="lidar_modifier" 
     name="lidar_modifier"
     >
-  </node> -->
+  </node> 
 
   
 

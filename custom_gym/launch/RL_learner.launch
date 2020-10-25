@@ -16,6 +16,7 @@
     pkg="custom_gym"
     type="master.py" 
     name="RL_environment"
+    output="screen"
     >
   </node>
  
