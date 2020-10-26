@@ -55,8 +55,8 @@ class P9RLEnv(gym.Env):
         self.data2 = []
         self.action = []
         self.pub = rospy.Publisher('/model/vehicle_blue/cmd_vel', Twist, queue_size=10)
-        rospy.wait_for_service('/stepper')
-        self.stepper = rospy.ServiceProxy('/stepper', StepFunction, persistent=True)
+        #rospy.wait_for_service('/stepper')
+        #self.stepper = rospy.ServiceProxy('/stepper', StepFunction, persistent=True)
         self.maxAngSpeed = 1
         self.maxLinSpeed = 0.2
 
@@ -84,7 +84,8 @@ class P9RLEnv(gym.Env):
         # self.stepper(1)
 
         scan = None
-        while scan is None:
+        gmap = None
+        while scan and gmap is None:
             try:
                 scan = rospy.wait_for_message("/lidar", LaserScan, timeout=1000)
                 gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
