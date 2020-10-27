@@ -20,7 +20,7 @@ sudo apt-get install ros-noetic-gmapping
 
 ### Install Stable Baselines3 ###
 ```bash
-pip install stable-baselines3[extra]
+pip3 install stable-baselines3[extra]
 ```
 
 ## Installation ##
