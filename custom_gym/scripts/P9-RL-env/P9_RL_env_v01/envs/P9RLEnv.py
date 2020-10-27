@@ -83,14 +83,11 @@ class P9RLEnv(gym.Env):
 
         # self.stepper(1)
 
-        scan = None
-        gmap = None
-        while scan and gmap is None:
-            try:
-                scan = rospy.wait_for_message("/lidar", LaserScan, timeout=1000)
-                gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
-            except:
-                pass
+
+
+        scan = rospy.wait_for_message("/lidar", LaserScan, timeout=1000)
+        gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
+
 
         state, done = self.setStateAndDone(gmap, scan)
         reward = self.setReward(state, done)
