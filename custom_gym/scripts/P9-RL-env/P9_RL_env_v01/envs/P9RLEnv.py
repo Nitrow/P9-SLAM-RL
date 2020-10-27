@@ -32,7 +32,7 @@ def splitZones(gmap):
     chunks = np.array_split(arr, 16)
 
     for x in range(16):
-        zoneValue.append(np.sum(a=chunks[x], axis=0, dtype=np.int8))
+        zoneValue.append(np.sum(a=chunks[x], axis=0, dtype=np.int32))
 
     state = zoneValue
     return state
@@ -41,7 +41,7 @@ def splitZones(gmap):
 class P9RLEnv(gym.Env):
 
     def __init__(self):
-        self.safetyLimit = 0.2
+        self.safetyLimit = 1
         self.obsProximityParam = 1
         self.scan_range = []
         rospy.init_node('RLEnv', anonymous=True)
@@ -55,14 +55,14 @@ class P9RLEnv(gym.Env):
         self.data2 = []
         self.action = []
         self.pub = rospy.Publisher('/model/vehicle_blue/cmd_vel', Twist, queue_size=10)
-        #rospy.wait_for_service('/stepper')
-        #self.stepper = rospy.ServiceProxy('/stepper', StepFunction, persistent=True)
+        rospy.wait_for_service('/stepper')
+        self.stepper = rospy.ServiceProxy('/stepper', StepFunction, persistent=True)
         self.maxAngSpeed = 1
         self.maxLinSpeed = 0.2
 
         self.action_space = spaces.Box(low=np.array([0, -self.maxAngSpeed]),
                                        high=np.array([self.maxLinSpeed, self.maxAngSpeed]), dtype=np.float16)
-        self.observation_space = spaces.Box(low=-1, high=100, shape=(123,), dtype=np.float16)
+        self.observation_space = spaces.Box(low=-1, high=100, shape=(120,), dtype=np.float16)
 
     def reset(self):
         # RESET ENVIRONMENT
@@ -73,15 +73,15 @@ class P9RLEnv(gym.Env):
         self.getPose()
         self.scan_range, minScan = scanRange(scan)
 
-        state = splitZones(gmap) + self.scan_range + self.position + self.quaternion
+        state = splitZones(gmap) + self.scan_range + [self.position[0],  + self.position[1], self.quaternion[2], self.quaternion[3]]
         return state
 
     def step(self, action):
         self.pubAction.linear.x = action[0]
         self.pubAction.angular.z = action[1]
         self.pub.publish(self.pubAction)
-
-        # self.stepper(1)
+        print(self.pubAction)
+        self.stepper(1)
 
 
 
@@ -90,11 +90,12 @@ class P9RLEnv(gym.Env):
 
 
         state, done = self.setStateAndDone(gmap, scan)
+        print(state)
         reward = self.setReward(state, done)
         return [state, reward, done, {}]
 
     def setReward(self, state, done):
-        self.reward = np.sum(a=state, axis=0, dtype=np.int8)
+        self.reward = np.sum(a=state, axis=0, dtype=np.int64)
         self.reward += self.rewardObstacleProximity()
         self.reward += -1
         if done:
@@ -114,7 +115,7 @@ class P9RLEnv(gym.Env):
         if minScan < self.safetyLimit:
             done = True
         # DIVIDE STATE INTO ZONES????????
-        state = splitZones(gmap) + self.scan_range + self.position + self.quaternion
+        state = splitZones(gmap) + self.scan_range + [self.position[0],  + self.position[1], self.quaternion[2], self.quaternion[3]]
 
         return state, done
 
@@ -125,7 +126,6 @@ class P9RLEnv(gym.Env):
         return self.position, self.quaternion
 
     def rewardObstacleProximity(self):
-
         closestObstacle = min(self.scan_range)
         if closestObstacle <= self.safetyLimit:
             return self.obsProximityParam * -(1 - (closestObstacle / self.safetyLimit))
