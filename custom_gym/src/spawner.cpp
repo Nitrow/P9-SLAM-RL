@@ -1,12 +1,14 @@
 #include "ros/ros.h"
+#include "custom_gym/spawner.h"
 #include <iostream>
 #include <ignition/math/Pose3.hh>
 #include <ignition/msgs/entity_factory.pb.h>
 #include <ignition/msgs.hh>
 #include <ignition/transport.hh>
+#include <unistd.h>
 double x, y, z, R, P, Y;
 
-int main(int argc, char **argv)
+bool respawn(custom_gym::spawner::Request &req, custom_gym::spawner::Response &res)
 {
     ignition::msgs::EntityFactory robot;
     ignition::msgs::Entity robot_remove;
@@ -39,13 +41,33 @@ int main(int argc, char **argv)
     
     ignition::msgs::Boolean ignrep;
     bool result;
+    bool rs_result;
     unsigned int timeout = 1000;
     
     // Deleting of model
     bool ex = node.Request("/world/diff_drive/remove", robot_remove, timeout, ignrep, result);
     
+    // A little time-delay before the next request. 
+    usleep(100000); // Time in MICROseconds, 100000 = 0.1 seconds 
+    
     //Spawing of model 
-    bool executed = node.Request("/world/diff_drive/create", robot, timeout, ignrep, result);
+    bool executed = node.Request("/world/diff_drive/create", robot, timeout, ignrep, rs_result);
+    
+    res.deletion_success = result;
+    res.respawn_success = rs_result; 
+    return true;    
+}
+
+
+
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "robot_respawn");
+    ros::NodeHandle n;
+
+    ros::ServiceServer service = n.advertiseService("/respawn", respawn);
+    ros::spin();
+
     
     return 0;
 }
