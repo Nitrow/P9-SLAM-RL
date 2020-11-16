@@ -3,6 +3,7 @@ import gym
 from gym import spaces
 import numpy as np
 from custom_gym.srv import StepFunction
+from custom_gym.srv import spawner
 from tf import TransformListener
 
 from nav_msgs.msg import OccupancyGrid
@@ -57,6 +58,8 @@ class P9RLEnv(gym.Env):
         self.pub = rospy.Publisher('/model/vehicle_blue/cmd_vel', Twist, queue_size=10)
         rospy.wait_for_service('/stepper')
         self.stepper = rospy.ServiceProxy('/stepper', StepFunction, persistent=True)
+        rospy.wait_for_service('/respawn')
+        self.respawn = rospy.ServiceProxy('/respawn', spawner, persistent=True)
         self.maxAngSpeed = 1
         self.maxLinSpeed = 0.2
 
@@ -66,6 +69,8 @@ class P9RLEnv(gym.Env):
 
     def reset(self):
         # RESET ENVIRONMENT
+        
+        self.respawn()
 
         scan = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)

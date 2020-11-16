@@ -13,48 +13,31 @@ bool respawn(custom_gym::spawner::Request &req, custom_gym::spawner::Response &r
     ignition::msgs::EntityFactory robot;
     ignition::msgs::Entity robot_remove;
     
-    // Setting name
-    robot.set_name("Boxbot");
+    ignition::msgs::Boolean response_msg;
+    ignition::msgs::Pose set_pose;
     
-    // Setting name and type of model to remove 
-    robot_remove.set_name("Boxbot");
-    robot_remove.set_type(ignition::msgs::Entity_Type_MODEL);
-
+    set_pose.set_name("vechicle_blue");
+    set_pose.set_id(40);
+    set_pose.mutable_position()->set_x(0.0);
+    set_pose.mutable_position()->set_y(0.0);
+    set_pose.mutable_position()->set_z(0.3);
+    set_pose.mutable_orientation()->set_x(0.0);
+    set_pose.mutable_orientation()->set_y(0.0);
+    set_pose.mutable_orientation()->set_z(0.0);
+    set_pose.mutable_orientation()->set_w(1.0);
     
-    // Setting file to spawn
-    robot.set_sdf_filename("/home/rasmus/Desktop/P9-SLAM-RL/src/simulations/models/cylinder.sdf");
     
-    // Setting Pose
-    ignition::math::Pose3d pose
-	{
-	    x = 0,
-	    y = 0,
-	    z = 2,
-	    R = 0,
-	    P = 0,
-	    Y = 0
-	};
-    ignition::msgs::Set(robot.mutable_pose(), pose);
 
 
     ignition::transport::Node node;
     
     ignition::msgs::Boolean ignrep;
     bool result;
-    bool rs_result;
-    unsigned int timeout = 1000;
+   
     
-    // Deleting of model
-    bool ex = node.Request("/world/diff_drive/remove", robot_remove, timeout, ignrep, result);
+    bool setting_pose = node.Request("/world/diff_drive/set_pose", set_pose, 1000, response_msg, result);
     
-    // A little time-delay before the next request. 
-    usleep(100000); // Time in MICROseconds, 100000 = 0.1 seconds 
     
-    //Spawing of model 
-    bool executed = node.Request("/world/diff_drive/create", robot, timeout, ignrep, rs_result);
-    
-    res.deletion_success = result;
-    res.respawn_success = rs_result; 
     return true;    
 }
 

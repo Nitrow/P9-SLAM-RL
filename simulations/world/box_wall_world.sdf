@@ -361,7 +361,7 @@
         </visual>
       </link>
     </model>
-
+    
     <model name='vehicle_blue'>
       <pose>0 0  0.3 0 -0 0</pose>
 
@@ -617,8 +617,5 @@
       </plugin>
 
     </model>
-
-  
-
   </world>
 </sdf>
