@@ -5,11 +5,13 @@ import numpy as np
 from custom_gym.srv import StepFunction
 from custom_gym.srv import spawner
 from tf import TransformListener
-
+import os
+import time
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
-
+from std_msgs.msg import String
+import ign_py
 
 def scanRange(scan):
     #
@@ -55,9 +57,9 @@ class P9RLEnv(gym.Env):
         self.state = []
         self.data2 = []
         self.action = []
+
         self.pub = rospy.Publisher('/model/vehicle_blue/cmd_vel', Twist, queue_size=10)
-        rospy.wait_for_service('/stepper')
-        self.stepper = rospy.ServiceProxy('/stepper', StepFunction, persistent=True)
+        self.pub2 = rospy.Publisher('/syscommand', String, queue_size=1)
         rospy.wait_for_service('/respawn')
         self.respawn = rospy.ServiceProxy('/respawn', spawner, persistent=True)
         self.maxAngSpeed = 1
@@ -69,11 +71,13 @@ class P9RLEnv(gym.Env):
 
     def reset(self):
         # RESET ENVIRONMENT
-        
+
         self.respawn()
+        self.pub2.publish("reset")
 
         scan = rospy.wait_for_message("/lidar", LaserScan, timeout=5)
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
+        ign_py.step(100)
 
         self.getPose()
         self.scan_range, minScan = scanRange(scan)
@@ -85,17 +89,13 @@ class P9RLEnv(gym.Env):
         self.pubAction.linear.x = action[0]
         self.pubAction.angular.z = action[1]
         self.pub.publish(self.pubAction)
-        print(self.pubAction)
-        self.stepper(1)
-
-
+        ign_py.step(1)
 
         scan = rospy.wait_for_message("/lidar", LaserScan, timeout=1000)
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
 
 
         state, done = self.setStateAndDone(gmap, scan)
-        print(state)
         reward = self.setReward(state, done)
         return [state, reward, done, {}]
 
@@ -119,7 +119,7 @@ class P9RLEnv(gym.Env):
         self.scan_range, minScan = scanRange(scan)
         if minScan < self.safetyLimit:
             done = True
-        # DIVIDE STATE INTO ZONES????????
+        # DIVIDE STATE INTO ZONES???e?????
         state = splitZones(gmap) + self.scan_range + [self.position[0],  + self.position[1], self.quaternion[2], self.quaternion[3]]
 
         return state, done
