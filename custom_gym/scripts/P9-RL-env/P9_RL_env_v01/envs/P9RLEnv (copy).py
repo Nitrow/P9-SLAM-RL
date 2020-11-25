@@ -12,6 +12,7 @@ from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Twist, geometry_msgs
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
+import ign_py
 from nav_msgs.srv import GetMap
 from std_srvs.srv import Empty
 
@@ -90,11 +91,9 @@ class P9RLEnv(gym.Env):
             print("gazebo/reset_simulation service call failed")
 
         self.pub2.publish("reset")
-        rospy.sleep(2)
-        self.unpause_proxy()
         scan = rospy.wait_for_message("/laser_back/scan", LaserScan, timeout=5)
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
-        self.pause_proxy()
+
         self.getPose()
         self.scan_range, minScan = scanRange(scan)
 
@@ -102,8 +101,6 @@ class P9RLEnv(gym.Env):
         return state
 
     def step(self, action):
-
-        self.unpause_proxy()
         linear_vel = action[0]
         ang_vel = action[1]
 
@@ -113,11 +110,10 @@ class P9RLEnv(gym.Env):
         self.pub.publish(vel_cmd)
 
 
-
         scan = rospy.wait_for_message("/laser_back/scan", LaserScan, timeout=1000)
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
 
-        self.pause_proxy()
+
         state, done = self.setStateAndDone(gmap, scan)
         reward = self.setReward(state, done)
         return [state, reward, done, {}]
@@ -125,6 +121,7 @@ class P9RLEnv(gym.Env):
     def setReward(self, state, done):
         self.rewardMap = np.sum(a=state, axis=0, dtype=np.int64)
         self.reward = self.rewardMap - self.rewardMapOld
+        print(self.reward)
         self.rewardMapOld = self.rewardMap
 
         self.reward += self.rewardObstacleProximity()

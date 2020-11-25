@@ -1,69 +1,33 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <launch>
-  <arg name="ign_args" default="$(find simulations)/world/box_wall_world.sdf"/>
+        <!-- overwriting these args -->
+        <arg name="debug" default="false" />
+        <arg name="gui" default="true" />
+        <arg name="pause" default="false" />
+        <arg name="world" default="$(find simulations)/world/box_wall_world_test.sdf" />
 
- <param name="use_sim_time" value="true"/>
+        <!-- include gazebo_ros launcher -->
+        <include file="$(find gazebo_ros)/launch/empty_world.launch">
+                <arg name="world_name" value="$(arg world)" />
+                <arg name="debug" value="$(arg debug)" />
+                <arg name="gui" value="$(arg gui)" />
+                <arg name="paused" value="$(arg pause)" />
+                <arg name="use_sim_time" value="true" />
+        </include>
 
- <!--  <node
-    pkg="tf2_ros"
-    type="static_transform_publisher" 
-    name="map_tf"
-    output="screen"
-    args="0 0 0   0 0 0   map vehicle_blue/odom">
-  </node>
-   -->
- 
-
-  <node
-    pkg="odom_transform"
-    type="odom_transform" 
-    name="odom"
-    >
-  </node>
-
- 
-  
   <node
     pkg="tf2_ros"
     type="static_transform_publisher" 
     name="lidar_tf"
-    args="-0.15   0 0.45   0 0 0   base_link vehicle_blue/lidar/gpu_lidar">
+    args="-0.15   0 0.45   0 0 0   vehicle_blue/base_link lidar_link">
   </node>
 
 
 
-  <node
-    pkg="ros_ign_gazebo"
-    type="ign_gazebo"
-    name="ign_gazebo"
-    required="true"
-    args="$(arg ign_args)">
-  </node>
-
-  <node
-    pkg="ros_ign_bridge"
-    type="parameter_bridge"
-    name="$(anon ros_ign_bridge)"
-    args="/model/vehicle_blue/cmd_vel@geometry_msgs/Twist]ignition.msgs.Twist /model/vehicle_blue/odometry@nav_msgs/Odometry[ignition.msgs.Odometry /lidar@sensor_msgs/LaserScan[ignition.msgs.LaserScan /clock@rosgraph_msgs/Clock[ignition.msgs.Clock /world/diff_drive/dynamic_pose/info@geometry_msgs/Pose[ignition.msgs.Pose">
-  </node>
-
-     <node
-    pkg="lidar_modifier"
-    type="lidar_modifier" 
-    name="lidar_modifier"
-    >
-  </node> 
-
-  
-
-
-
-
-
-  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping">
-      <remap from="scan" to="/lidar"/>
+ <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping">
+      <remap from="scan" to="laser_back/scan"/>
       <param name="odom_frame" value="vehicle_blue/odom" />
-      <param name="base_frame" value="base_link" />
+      <param name="base_frame" value="vehicle_blue/base_link" />
       <param name="map_update_interval" value="0.1"/>
       <param name="throttle_scans" value="1"/>
       <param name="maxUrange" value="3.5"/>
@@ -95,12 +59,14 @@
       <param name="lasamplestep" value="0.005"/>
       <param name="transform_publish_period" value="0.2"/>
 
-    </node>
+ </node>
 
 
-  <node
+ <node
     type="rviz"
     name="rviz"
     pkg="rviz"
     args="-d $(find simulations)/rviz/lidar2.rviz" />
 </launch>
+
+

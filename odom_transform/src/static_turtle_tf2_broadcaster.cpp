@@ -10,6 +10,8 @@ void chatterCallback(const nav_msgs::Odometry::ConstPtr& msg){
     static tf2_ros::StaticTransformBroadcaster static_broadcaster;
     geometry_msgs::TransformStamped static_transformStamped;
 
+    msg.
+
     static_transformStamped.header.stamp = ros::Time::now();
     static_transformStamped.header.frame_id = "vehicle_blue/odom";
     static_transformStamped.child_frame_id = "base_link";
