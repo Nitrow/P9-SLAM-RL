@@ -4,7 +4,6 @@ import tf2_ros
 from gym import spaces
 import numpy as np
 from custom_gym.srv import StepFunction
-from custom_gym.srv import spawner
 from tf import TransformListener
 import os
 import time
@@ -61,12 +60,11 @@ class P9RLEnv(gym.Env):
         self.data2 = []
         self.action = []
         self.rewardMapOld = 0
+        self.done = False
 
         self.pub = rospy.Publisher('/vehicle_blue/cmd_vel', Twist, queue_size=10)
         self.pub2 = rospy.Publisher('/syscommand', String, queue_size=1)
-        rospy.wait_for_service('/respawn')
         rospy.wait_for_service('/dynamic_map')
-        self.respawn = rospy.ServiceProxy('/respawn', spawner, persistent=True)
         self.getmap = rospy.ServiceProxy('/dynamic_map', GetMap, persistent=True)
         self.maxAngSpeed = 1
         self.maxLinSpeed = 0.2
@@ -82,18 +80,23 @@ class P9RLEnv(gym.Env):
     def reset(self):
         # RESET ENVIRONMENT
 
-        rospy.wait_for_service('gazebo/reset_simulation')
+        if self.done is True:
+            rospy.wait_for_service('gazebo/reset_simulation')
 
-        try:
-            self.reset_proxy()
-        except rospy.ServiceException as e:
-            print("gazebo/reset_simulation service call failed")
+            try:
+                self.reset_proxy()
+            except rospy.ServiceException as e:
+                print("gazebo/reset_simulation service call failed")
 
-        self.pub2.publish("reset")
-        rospy.sleep(2)
+            self.pub2.publish("reset")
+
+            self.done = False
+
+
         self.unpause_proxy()
         scan = rospy.wait_for_message("/laser_back/scan", LaserScan, timeout=5)
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
+
         self.pause_proxy()
         self.getPose()
         self.scan_range, minScan = scanRange(scan)
@@ -118,9 +121,9 @@ class P9RLEnv(gym.Env):
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
 
         self.pause_proxy()
-        state, done = self.setStateAndDone(gmap, scan)
-        reward = self.setReward(state, done)
-        return [state, reward, done, {}]
+        state, self.done = self.setStateAndDone(gmap, scan)
+        reward = self.setReward(state, self.done)
+        return [state, reward, self.done, {}]
 
     def setReward(self, state, done):
         self.rewardMap = np.sum(a=state, axis=0, dtype=np.int64)
