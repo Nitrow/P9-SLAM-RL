@@ -1,9 +1,7 @@
 import rospy
 import gym
-import tf2_ros
 from gym import spaces
 import numpy as np
-from custom_gym.srv import StepFunction
 from tf import TransformListener
 import os
 import time
@@ -15,23 +13,9 @@ from nav_msgs.srv import GetMap
 from std_srvs.srv import Empty
 
 
-def scanRange(scan):
-    #
-    scan_range = []
-    for i in range(len(scan.ranges)):
-        if scan.ranges[i] == float('Inf'):
-            scan_range.append(5)
-        elif np.isnan(scan.ranges[i]):
-            scan_range.append(0)
-        else:
-            scan_range.append(scan.ranges[i])
-
-    minScan = min(list(filter(lambda a: a != 0, scan_range[:])))
-    return scan_range, minScan
 
 
 def splitZones(gmap):
-
     zoneValue = []
     arr = np.asarray(gmap.data)
     chunks = np.array_split(arr, 16)
@@ -47,7 +31,8 @@ class P9RLEnv(gym.Env):
 
     def __init__(self):
         self.safetyLimit = 1
-        self.obsProximityParam = 1
+        self.collisionParam = 0.2
+        self.obsProximityParam = 3
         self.scan_range = []
         rospy.init_node('RLEnv', anonymous=True)
         self.tf = TransformListener()
@@ -61,6 +46,8 @@ class P9RLEnv(gym.Env):
         self.action = []
         self.rewardMapOld = 0
         self.done = False
+        self.TimeoutCounter = 0
+        self.lidarDiscretization = 10
 
         self.pub = rospy.Publisher('/vehicle_blue/cmd_vel', Twist, queue_size=10)
         self.pub2 = rospy.Publisher('/syscommand', String, queue_size=1)
@@ -75,10 +62,12 @@ class P9RLEnv(gym.Env):
 
         self.action_space = spaces.Box(low=np.array([0, -self.maxAngSpeed]),
                                        high=np.array([self.maxLinSpeed, self.maxAngSpeed]), dtype=np.float16)
-        self.observation_space = spaces.Box(low=-1, high=100, shape=(120,), dtype=np.float16)
+        self.observation_space = spaces.Box(low=-1, high=100, shape=(30,), dtype=np.float16)
 
     def reset(self):
         # RESET ENVIRONMENT
+
+        self.TimeoutCounter = 0
 
         if self.done is True:
             rospy.wait_for_service('gazebo/reset_simulation')
@@ -92,21 +81,25 @@ class P9RLEnv(gym.Env):
 
             self.done = False
 
-
         self.unpause_proxy()
-        scan = rospy.wait_for_message("/laser_back/scan", LaserScan, timeout=5)
-        gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
+        time.sleep(1)
+        scan = rospy.wait_for_message("/scan", LaserScan, timeout=1000)
+        gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)
 
         self.pause_proxy()
         self.getPose()
-        self.scan_range, minScan = scanRange(scan)
+        self.scan_range, minScan = self.scanRange(scan)
 
-        state = splitZones(gmap) + self.scan_range + [self.position[0],  + self.position[1], self.quaternion[2], self.quaternion[3]]
+        self.rewardMapOld = np.sum(a=splitZones(gmap), axis=0, dtype=np.int64)
+
+        state = splitZones(gmap) + self.scan_range + [self.position[0], + self.position[1], self.quaternion[2],
+                                                      self.quaternion[3]]
         return state
 
     def step(self, action):
 
-        self.unpause_proxy()
+        self.TimeoutCounter += 1
+
         linear_vel = action[0]
         ang_vel = action[1]
 
@@ -115,12 +108,18 @@ class P9RLEnv(gym.Env):
         vel_cmd.angular.z = ang_vel
         self.pub.publish(vel_cmd)
 
+        self.unpause_proxy()
 
-
-        scan = rospy.wait_for_message("/laser_back/scan", LaserScan, timeout=1000)
-        gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
+        scan = rospy.wait_for_message("/scan", LaserScan, timeout=1000)
+        gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)
 
         self.pause_proxy()
+
+
+
+
+
+
         state, self.done = self.setStateAndDone(gmap, scan)
         reward = self.setReward(state, self.done)
         return [state, reward, self.done, {}]
@@ -145,11 +144,11 @@ class P9RLEnv(gym.Env):
 
         done = False
         self.getPose()
-        self.scan_range, minScan = scanRange(scan)
-        if minScan < self.safetyLimit:
+        self.scan_range, minScan = self.scanRange(scan)
+        if minScan < self.collisionParam or self.TimeoutCounter == 100000:
             done = True
-        # DIVIDE STATE INTO ZONES???e?????
-        state = splitZones(gmap) + self.scan_range + [self.position[0],  + self.position[1], self.quaternion[2], self.quaternion[3]]
+        state = splitZones(gmap) + self.scan_range + [self.position[0], + self.position[1], self.quaternion[2],
+                                                      self.quaternion[3]]
 
         return state, done
 
@@ -165,7 +164,13 @@ class P9RLEnv(gym.Env):
             return self.obsProximityParam * -(1 - (closestObstacle / self.safetyLimit))
         else:
             return 0
+    def scanRange(self, scan):
+    #
+        scan_range = []
 
+        for x in range(0, 100, self.lidarDiscretization):
+            end = x + self.lidarDiscretization
+            scan_range.append(min(scan.ranges[x:end]))
 
-
-
+        minScan = min(list(filter(lambda a: a != 0, scan_range[:])))
+        return scan_range, minScan

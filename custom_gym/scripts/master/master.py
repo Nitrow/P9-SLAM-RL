@@ -11,8 +11,9 @@ from stable_baselines3.common.cmd_util import make_vec_env
 env = make_vec_env('P9_RL-v0', n_envs=1)
 
 
-model = PPO(MlpPolicy, env, verbose=1, gamma=0.99)
+model = PPO(MlpPolicy, env, verbose=1, gamma=0.99, tensorboard_log='/home/asger/P9/src/custom_gym/scripts')
 #model = PPO.load(simLogPath +'models/'+ simRunID, env,  verbose=0, tensorboard_log=tensorBoard/)
-model.learn(total_timesteps=100000, log_interval=1)
+model.learn(total_timesteps=1000000, log_interval=1)
 print('Training finished...')
+model.save('/home/asger/P9/src/custom_gym/scripts')
 print('Model saved...')
