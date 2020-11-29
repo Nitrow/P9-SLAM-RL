@@ -4,20 +4,20 @@
 
 
 
-  <node
+  <!-- <node
     pkg="custom_gym"
     type="custom_gym" 
     name="stepservice"
     >
-  </node>
+  </node> -->
 
 
-  <node
+  <!-- <node
     pkg="custom_gym"
     type="spawnFunction" 
     name="spawnFunction"
     >
-  </node>
+  </node> -->
 
   <node
     pkg="custom_gym"
