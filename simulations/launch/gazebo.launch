@@ -43,7 +43,7 @@
       <param name="kernelSize" value="1"/>
       <param name="lstep" value="0.05"/>
       <param name="astep" value="0.05"/>
-      <param name="iterations" value="3"/>
+      <param name="iterations" value="1"/>
       <param name="lsigma" value="0.075"/>
       <param name="ogain" value="3.0"/>
       <param name="lskip" value="0"/>
@@ -51,8 +51,8 @@
       <param name="srt" value="0"/>
       <param name="str" value="0"/>
       <param name="stt" value="0"/>
-      <param name="linearUpdate" value="1.0"/>
-      <param name="angularUpdate" value="0.5"/>
+      <param name="linearUpdate" value="0.1"/>
+      <param name="angularUpdate" value="0.1"/>
       <param name="temporalUpdate" value="0.01"/>
       <param name="resampleThreshold" value="0.5"/>
       <param name="particles" value="30"/>
@@ -60,13 +60,13 @@
       <param name="ymin" value="-10"/>
       <param name="xmax" value="10"/>
       <param name="ymax" value="10"/>
-      <param name="delta" value="0.1"/>
+      <param name="delta" value="0.2"/>
       <param name="llsamplerange" value="0.01"/>
       <param name="llsamplestep" value="0.01"/>
       <param name="lasamplerange" value="0.005"/>
       <param name="lasamplestep" value="0.005"/>
       <param name="transform_publish_period" value="0.01"/>
-      <param name="minimumScore" value="50"/>
+      <param name="minimumScore" value="20"/>
       <param name="maxRange" value="3.5"/>
       
 

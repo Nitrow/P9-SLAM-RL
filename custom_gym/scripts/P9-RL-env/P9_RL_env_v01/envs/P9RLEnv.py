@@ -30,9 +30,9 @@ def splitZones(gmap):
 class P9RLEnv(gym.Env):
 
     def __init__(self):
-        self.safetyLimit = 1
-        self.collisionParam = 0.2
-        self.obsProximityParam = 3
+        self.safetyLimit = 2
+        self.collisionParam = 0.5
+        self.obsProximityParam = 10
         self.scan_range = []
         rospy.init_node('RLEnv', anonymous=True)
         self.tf = TransformListener()
@@ -54,7 +54,7 @@ class P9RLEnv(gym.Env):
         rospy.wait_for_service('/dynamic_map')
         self.getmap = rospy.ServiceProxy('/dynamic_map', GetMap, persistent=True)
         self.maxAngSpeed = 1
-        self.maxLinSpeed = 0.2
+        self.maxLinSpeed = 0.5
 
         self.reset_proxy = rospy.ServiceProxy('gazebo/reset_simulation', Empty)
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
@@ -82,6 +82,15 @@ class P9RLEnv(gym.Env):
             self.done = False
 
         self.unpause_proxy()
+        linear_vel = 0
+        ang_vel = 0
+
+        vel_cmd = Twist()
+        vel_cmd.linear.x = linear_vel
+        vel_cmd.angular.z = ang_vel
+        self.pub.publish(vel_cmd)
+
+
         time.sleep(1)
         scan = rospy.wait_for_message("/scan", LaserScan, timeout=1000)
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)
@@ -99,7 +108,6 @@ class P9RLEnv(gym.Env):
     def step(self, action):
 
         self.TimeoutCounter += 1
-
         linear_vel = action[0]
         ang_vel = action[1]
 
@@ -117,9 +125,6 @@ class P9RLEnv(gym.Env):
 
 
 
-
-
-
         state, self.done = self.setStateAndDone(gmap, scan)
         reward = self.setReward(state, self.done)
         return [state, reward, self.done, {}]
@@ -130,9 +135,11 @@ class P9RLEnv(gym.Env):
         self.rewardMapOld = self.rewardMap
 
         self.reward += self.rewardObstacleProximity()
-        self.reward += -1
+        #self.reward += -1
         if done:
-            self.reward += 1000
+            self.reward += -1000
+
+        #print(self.reward)
         return self.reward
 
     def render(self, mode='human'):
@@ -145,7 +152,7 @@ class P9RLEnv(gym.Env):
         done = False
         self.getPose()
         self.scan_range, minScan = self.scanRange(scan)
-        if minScan < self.collisionParam or self.TimeoutCounter == 100000:
+        if minScan < self.collisionParam or self.TimeoutCounter == 1000:
             done = True
         state = splitZones(gmap) + self.scan_range + [self.position[0], + self.position[1], self.quaternion[2],
                                                       self.quaternion[3]]
