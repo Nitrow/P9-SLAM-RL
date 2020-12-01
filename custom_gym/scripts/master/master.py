@@ -2,11 +2,14 @@
 import gym
 import P9_RL_env_v01
 import numpy as np
+import torch as th
 
 from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
 from stable_baselines3.common.cmd_util import make_vec_env
 
+
+policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=[128, 128])
 
 env = make_vec_env('P9_RL-v0', n_envs=1)
 

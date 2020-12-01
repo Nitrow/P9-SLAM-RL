@@ -30,7 +30,7 @@
       </ode>
       <real_time_factor>1</real_time_factor>
       <max_step_size>0.001</max_step_size>
-      <real_time_update_rate>3000</real_time_update_rate>
+      <real_time_update_rate>1000</real_time_update_rate>
     </physics>
 
 <!--  DOESN'T WORK, DOESN'T PUBLISH ODOMETRY FOR SOME REASON!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -52,6 +52,14 @@
             </plane>
           </geometry>
         </collision>
+        <surface>
+        <friction>
+          <ode>
+            <mu>1</mu>
+            <mu2>1</mu2>
+          </ode>
+        </friction>
+      </surface>
         <visual name="visual">
           <geometry>
             <plane>
@@ -275,7 +283,7 @@
       <link name='left_wheel'>
         <pose>0.3 0.225 -0.2 -1.5707 0 0</pose>
         <inertial>
-          <mass>2</mass>
+          <mass>10</mass>
           <inertia>
             <ixx>0.01</ixx>
             <ixy>0</ixy>
@@ -304,12 +312,20 @@
             </sphere>
           </geometry>
         </collision>
+        <surface>
+        <friction>
+          <ode>
+            <mu>1</mu>
+            <mu2>1</mu2>
+          </ode>
+        </friction>
+      </surface>
       </link>
 
       <link name='right_wheel'>
         <pose>0.3 -0.225 -0.2 -1.5707 0 0</pose>
         <inertial>
-          <mass>2</mass>
+          <mass>10</mass>
           <inertia>
             <ixx>0.01</ixx>
             <ixy>0</ixy>
@@ -338,6 +354,14 @@
             </sphere>
           </geometry>
         </collision>
+        <surface>
+        <friction>
+          <ode>
+            <mu>1</mu>
+            <mu2>1</mu2>
+          </ode>
+        </friction>
+      </surface>
       </link>
 
       <link name='caster'>
@@ -372,6 +396,14 @@
             </sphere>
           </geometry>
         </collision>
+        <surface>
+        <friction>
+          <ode>
+            <mu>1</mu>
+            <mu2>1</mu2>
+          </ode>
+        </friction>
+        </surface>
       </link>
 
 
@@ -486,7 +518,7 @@
 
       <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
         <alwaysOn>true</alwaysOn>
-        <updateRate>50</updateRate>
+        <updateRate>1000</updateRate>
         <leftJoint>left_wheel_joint</leftJoint>
         <rightJoint>right_wheel_joint</rightJoint>
         <wheelSeparation>0.450</wheelSeparation>
