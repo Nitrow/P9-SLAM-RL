@@ -452,7 +452,7 @@
 
 
       <link name='lidar'>
-        <pose>0.15 -0 0.25 0 -0 0</pose>
+        <pose>0 -0 0.25 0 -0 0</pose>
         <inertial>
           <mass>1.14395</mass>
           <inertia>
