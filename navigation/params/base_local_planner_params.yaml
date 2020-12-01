@@ -8,7 +8,7 @@ TrajectoryPlannerROS:
  acc_lim_x: 2.5
  acc_lim_y: 2.5
 
- sim_time: 50
- sim_granularity: 1
+ #sim_time: 50
+ #sim_granularity: 1
 
  holonomic_robot: false
