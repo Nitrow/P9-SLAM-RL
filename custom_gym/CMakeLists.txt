@@ -208,22 +208,4 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-find_package(ignition-msgs6 QUIET REQUIRED)
-find_package(ignition-transport9 QUIET REQUIRED)
 
-
-
-
-
-add_executable(spawnFunction src/spawner.cpp)
-add_executable(custom_gym src/StepFunction.cpp)
-add_executable(removeFunction src/remove.cpp)
-target_link_libraries(custom_gym ${catkin_LIBRARIES})
-target_link_libraries(custom_gym ${IGNITION-MSGS_LIBRARIES})
-target_link_libraries(custom_gym ${IGNITION-TRANSPORT_LIBRARIES})
-target_link_libraries(removeFunction ${catkin_LIBRARIES})
-target_link_libraries(removeFunction ${IGNITION-MSGS_LIBRARIES})
-target_link_libraries(removeFunction ${IGNITION-TRANSPORT_LIBRARIES})
-target_link_libraries(spawnFunction ${catkin_LIBRARIES})
-target_link_libraries(spawnFunction ${IGNITION-MSGS_LIBRARIES})
-target_link_libraries(spawnFunction ${IGNITION-TRANSPORT_LIBRARIES})
