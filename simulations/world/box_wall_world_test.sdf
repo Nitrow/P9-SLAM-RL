@@ -484,7 +484,7 @@
          <ray>
             <scan>
                <horizontal>
-                  <samples>100</samples>
+                  <samples>360</samples>
                   <resolution>1</resolution>
                   <min_angle>-3.14</min_angle>
                   <max_angle>3.14</max_angle>
@@ -567,12 +567,12 @@
 
       <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
         <alwaysOn>true</alwaysOn>
-        <updateRate>1000</updateRate>
+        <updateRate>100</updateRate>
         <leftJoint>left_wheel_joint</leftJoint>
         <rightJoint>right_wheel_joint</rightJoint>
         <wheelSeparation>0.450</wheelSeparation>
         <wheelDiameter>0.2</wheelDiameter>
-        <torque>0</torque>
+        <torque>100</torque>
         <commandTopic>cmd_vel</commandTopic>
         <odometryTopic>odom</odometryTopic>
         <odometryFrame>odom</odometryFrame>

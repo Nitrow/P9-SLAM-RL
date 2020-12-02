@@ -4,6 +4,7 @@ from gym import spaces
 import numpy as np
 from tf import TransformListener
 import os
+from nav_msgs.msg import Odometry
 import time
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Twist, geometry_msgs
@@ -11,6 +12,7 @@ from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
 from nav_msgs.srv import GetMap
 from std_srvs.srv import Empty
+from tf.transformations import euler_from_quaternion
 
 
 
@@ -32,7 +34,7 @@ class P9RLEnv(gym.Env):
     def __init__(self):
         self.safetyLimit = 1
         self.collisionParam = 0.3
-        self.obsProximityParam = 3
+        self.obsProximityParam = 5
         self.scan_range = []
         rospy.init_node('RLEnv', anonymous=True)
         self.tf = TransformListener()
@@ -47,22 +49,32 @@ class P9RLEnv(gym.Env):
         self.rewardMapOld = 0
         self.done = False
         self.TimeoutCounter = 0
-        self.lidarDiscretization = 10
+        self.lidarDiscretization = 30
 
         self.pub = rospy.Publisher('/vehicle_blue/cmd_vel', Twist, queue_size=10)
         self.pub2 = rospy.Publisher('/syscommand', String, queue_size=1)
-        rospy.wait_for_service('/dynamic_map')
-        self.getmap = rospy.ServiceProxy('/dynamic_map', GetMap, persistent=True)
         self.maxAngSpeed = 1
-        self.maxLinSpeed = 4
+        self.maxLinSpeed = 1
 
         self.reset_proxy = rospy.ServiceProxy('gazebo/reset_simulation', Empty)
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
         self.pause_proxy = rospy.ServiceProxy('gazebo/pause_physics', Empty)
 
+        self.sub_odom = rospy.Subscriber('/vehicle_blue/odom', Odometry, self.getOdometry)
+
         self.action_space = spaces.Box(low=np.array([0, -self.maxAngSpeed]),
                                        high=np.array([self.maxLinSpeed, self.maxAngSpeed]), dtype=np.float16)
-        self.observation_space = spaces.Box(low=-1, high=100, shape=(30,), dtype=np.float16)
+        self.observation_space = spaces.Box(low=-1, high=100, shape=(31,), dtype=np.float16)
+
+    def getOdometry(self, odom):
+
+        self.position = odom.pose.pose.position
+        orientation = odom.pose.pose.orientation
+        orientation_list = [orientation.x, orientation.y, orientation.z, orientation.w]
+        _, _, self.yaw = euler_from_quaternion(orientation_list)
+        return self.position, self.yaw
+
+
 
     def reset(self):
         # RESET ENVIRONMENT
@@ -87,13 +99,11 @@ class P9RLEnv(gym.Env):
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)
 
         self.pause_proxy()
-        self.getPose()
         self.scan_range, minScan = self.scanRange(scan)
 
         self.rewardMapOld = np.sum(a=splitZones(gmap), axis=0, dtype=np.int64)
 
-        state = splitZones(gmap) + self.scan_range + [self.position[0], + self.position[1], self.quaternion[2],
-                                                      self.quaternion[3]]
+        state = splitZones(gmap) + self.scan_range + [self.position.x, self.position.y, self.yaw]
         return state
 
     def step(self, action):
@@ -115,23 +125,19 @@ class P9RLEnv(gym.Env):
 
         self.pause_proxy()
 
-
-
-
-
-
         state, self.done = self.setStateAndDone(gmap, scan)
-        reward = self.setReward(state, self.done)
+        reward = self.setReward(self.done, gmap)
         return [state, reward, self.done, {}]
 
-    def setReward(self, state, done):
-        self.rewardMap = np.sum(a=state, axis=0, dtype=np.int64)
+    def setReward(self, done, gmap):
+
+        self.rewardMap = np.sum(np.array(gmap.data) > -1, axis=0)
         self.reward = self.rewardMap - self.rewardMapOld
         self.rewardMapOld = self.rewardMap
 
         self.reward += self.rewardObstacleProximity()
         if done:
-            self.reward += -1000
+            self.reward += -10000
         return self.reward
 
     def render(self, mode='human'):
@@ -142,20 +148,14 @@ class P9RLEnv(gym.Env):
         # # Set state and done
 
         done = False
-        self.getPose()
         self.scan_range, minScan = self.scanRange(scan)
-        if minScan < self.collisionParam or self.TimeoutCounter == 10000:
+        if minScan < self.collisionParam or self.TimeoutCounter == 3000:
             done = True
-        state = splitZones(gmap) + self.scan_range + [self.position[0], + self.position[1], self.quaternion[2],
-                                                      self.quaternion[3]]
+        state = splitZones(gmap) + self.scan_range + [self.position.x, self.position.y, self.yaw]
 
         return state, done
 
-    def getPose(self):
-        if self.tf.frameExists("vehicle_blue/base_link") and self.tf.frameExists("vehicle_blue/odom"):
-            t = self.tf.getLatestCommonTime("vehicle_blue/base_link", "vehicle_blue/odom")
-            self.position, self.quaternion = self.tf.lookupTransform("vehicle_blue/base_link", "vehicle_blue/odom", t)
-        return self.position, self.quaternion
+
 
     def rewardObstacleProximity(self):
         closestObstacle = min(self.scan_range)
@@ -167,7 +167,7 @@ class P9RLEnv(gym.Env):
     #
         scan_range = []
 
-        for x in range(0, 100, self.lidarDiscretization):
+        for x in range(0, 360, self.lidarDiscretization):
             end = x + self.lidarDiscretization
             scan_range.append(min(scan.ranges[x:end]))
 
