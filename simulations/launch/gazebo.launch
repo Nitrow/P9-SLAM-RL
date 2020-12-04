@@ -2,7 +2,7 @@
 <launch>
         <!-- overwriting these args -->
         <arg name="debug" default="false" />
-        <arg name="gui" default="true" />
+        <arg name="gui" default="false" />
         <arg name="pause" default="false" />
         <arg name="world" default="$(find simulations)/world/box_wall_world_test.sdf" />
 
@@ -60,7 +60,7 @@
       <param name="ymin" value="-20"/>
       <param name="xmax" value="20"/>
       <param name="ymax" value="20"/>
-      <param name="delta" value="0.25"/>
+      <param name="delta" value="0.5"/>
       <param name="llsamplerange" value="0.01"/>
       <param name="llsamplestep" value="0.01"/>
       <param name="lasamplerange" value="0.005"/>

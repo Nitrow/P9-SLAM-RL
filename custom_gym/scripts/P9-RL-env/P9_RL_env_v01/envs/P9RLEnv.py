@@ -33,7 +33,7 @@ class P9RLEnv(gym.Env):
 
     def __init__(self):
         self.safetyLimit = 1
-        self.collisionParam = 0.3
+        self.collisionParam = 0.5
         self.obsProximityParam = 5
         self.scan_range = []
         rospy.init_node('RLEnv', anonymous=True)
@@ -54,7 +54,7 @@ class P9RLEnv(gym.Env):
         self.pub = rospy.Publisher('/vehicle_blue/cmd_vel', Twist, queue_size=10)
         self.pub2 = rospy.Publisher('/syscommand', String, queue_size=1)
         self.maxAngSpeed = 1
-        self.maxLinSpeed = 1
+        self.maxLinSpeed = 2
 
         self.reset_proxy = rospy.ServiceProxy('gazebo/reset_simulation', Empty)
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
@@ -101,7 +101,7 @@ class P9RLEnv(gym.Env):
         self.pause_proxy()
         self.scan_range, minScan = self.scanRange(scan)
 
-        self.rewardMapOld = np.sum(a=splitZones(gmap), axis=0, dtype=np.int64)
+        self.rewardMapOld = 49
 
         state = splitZones(gmap) + self.scan_range + [self.position.x, self.position.y, self.yaw]
         return state
@@ -135,7 +135,7 @@ class P9RLEnv(gym.Env):
         self.reward = self.rewardMap - self.rewardMapOld
         self.rewardMapOld = self.rewardMap
 
-        self.reward += self.rewardObstacleProximity()
+        #self.reward += self.rewardObstacleProximity()
         if done:
             self.reward += -10000
         return self.reward
@@ -149,7 +149,7 @@ class P9RLEnv(gym.Env):
 
         done = False
         self.scan_range, minScan = self.scanRange(scan)
-        if minScan < self.collisionParam or self.TimeoutCounter == 3000:
+        if minScan < self.collisionParam or self.TimeoutCounter == 5000:
             done = True
         state = splitZones(gmap) + self.scan_range + [self.position.x, self.position.y, self.yaw]
 
