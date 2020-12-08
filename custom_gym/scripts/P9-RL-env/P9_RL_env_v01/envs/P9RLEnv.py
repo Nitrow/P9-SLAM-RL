@@ -13,6 +13,10 @@ from std_msgs.msg import String
 from nav_msgs.srv import GetMap
 from std_srvs.srv import Empty
 from tf.transformations import euler_from_quaternion
+from tf.transformations import quaternion_from_euler
+import actionlib
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal, actionlib_msgs
+import math
 
 
 
@@ -24,7 +28,7 @@ class P9RLEnv(gym.Env):
 
     def __init__(self):
         self.safetyLimit = 1
-        self.collisionParam = 0.5
+        self.collisionParam = 1
         self.obsProximityParam = 5
         self.scan_range = []
         rospy.init_node('RLEnv', anonymous=True)
@@ -44,8 +48,7 @@ class P9RLEnv(gym.Env):
 
         self.pub = rospy.Publisher('/vehicle_blue/cmd_vel', Twist, queue_size=10)
         self.pub2 = rospy.Publisher('/syscommand', String, queue_size=1)
-        self.maxAngSpeed = 1
-        self.maxLinSpeed = 2
+        self.maxAngularAction = 60
 
         self.reset_proxy = rospy.ServiceProxy('gazebo/reset_simulation', Empty)
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
@@ -53,9 +56,9 @@ class P9RLEnv(gym.Env):
 
         self.sub_odom = rospy.Subscriber('/vehicle_blue/odom', Odometry, self.getOdometry)
 
-        self.action_space = spaces.Box(low=np.array([0, -self.maxAngSpeed]),
-                                       high=np.array([self.maxLinSpeed, self.maxAngSpeed]), dtype=np.float16)
-        self.observation_space = spaces.Box(low=-1, high=100, shape=(4111,), dtype=np.float16)
+        self.action_space = spaces.Box(low=np.array([-self.maxAngularAction]),
+                                       high=np.array([self.maxAngularAction]), dtype=np.float16)
+        self.observation_space = spaces.Box(low=-1, high=100, shape=(4099,), dtype=np.float16)
 
     def getOdometry(self, odom):
 
@@ -63,6 +66,7 @@ class P9RLEnv(gym.Env):
         orientation = odom.pose.pose.orientation
         orientation_list = [orientation.x, orientation.y, orientation.z, orientation.w]
         _, _, self.yaw = euler_from_quaternion(orientation_list)
+
         return self.position, self.yaw
 
 
@@ -73,7 +77,7 @@ class P9RLEnv(gym.Env):
         self.TimeoutCounter = 0
 
         if self.done is True:
-            rospy.wait_for_service('gazebo/reset_simulation')
+            rospy.wait_for_service('gazebo/reset_model')
 
             try:
                 self.reset_proxy()
@@ -101,33 +105,26 @@ class P9RLEnv(gym.Env):
 
         self.unpause_proxy()
 
-        robgoaly = action[1] - self.position.y
-        robgoalx = action[0] - self.position.x
-        goal_angle = math.atan2(robgoalx, robgoaly)
-
-        client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-        client.wait_for_server()
+        self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+        self.client.wait_for_server()
 
         goal = MoveBaseGoal()
-        goal.target_pose.header.frame_id = 'vehicle_blue/odom'
+        goal.target_pose.header.frame_id = "vehicle_blue/base_link"
         goal.target_pose.header.stamp = rospy.Time.now()
-        goal.target_pose.pose.position.x = action[0] + self.position[0]
-        goal.target_pose.pose.position.y = action[1] + self.position[1]
-        goal.target_pose.pose.orientation.z = 0
-        goal.target_pose.pose.orientation.w = 1
+        goal.target_pose.pose.position.x = 1 * math.cos(action[0])
+        goal.target_pose.pose.position.y = 1 * math.sin(action[0])
 
-        client.send_goal(goal)
-        wait = client.wait_for_result()
-        if wait == "rejected":
-            os.system("rostopic pub /move_base/cancel actionlib_msgs/GoalID -- {}")
-            self.canselled = True
+        quat = quaternion_from_euler(0, 0, action[0])
+        goal.target_pose.pose.orientation.z = quat[2]
+        goal.target_pose.pose.orientation.w = quat[3]
 
-        print(wait)
+        self.client.send_goal(goal)
+        self.client.wait_for_result()
 
+        scan = rospy.wait_for_message("/scan", LaserScan, timeout=1000)
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)
 
         self.pause_proxy()
-
         state, self.done = self.setStateAndDone(gmap, scan)
         reward = self.setReward(self.done, gmap)
         return [state, reward, self.done, {}]
@@ -139,9 +136,6 @@ class P9RLEnv(gym.Env):
         self.rewardMapOld = self.rewardMap
 
         #self.reward += self.rewardObstacleProximity()
-        if self.canselled:
-            self.reward += -100
-            self.canselled = False
         if done:
             self.reward += -100
         return self.reward
@@ -159,7 +153,7 @@ class P9RLEnv(gym.Env):
             done = True
 
         self.splitZones(gmap)
-        state = self.zoneValue + self.scan_range + [self.position.x, self.position.y, self.yaw]
+        state = self.zoneValue + [self.position.x, self.position.y, self.yaw]
 
         return state, done
 
@@ -190,17 +184,4 @@ class P9RLEnv(gym.Env):
         for x in range(4096):
             self.zoneValue.append(np.sum(a=chunks[x], axis=0, dtype=np.int32))
 
-        np.array(self.zoneValue) > -1
 
-    def euler_to_quaternion(yaw, pitch, roll):
-
-        qx = np.sin(roll / 2) * np.cos(pitch / 2) * np.cos(yaw / 2) - np.cos(roll / 2) * np.sin(pitch / 2) * np.sin(
-            yaw / 2)
-        qy = np.cos(roll / 2) * np.sin(pitch / 2) * np.cos(yaw / 2) + np.sin(roll / 2) * np.cos(pitch / 2) * np.sin(
-            yaw / 2)
-        qz = np.cos(roll / 2) * np.cos(pitch / 2) * np.sin(yaw / 2) - np.sin(roll / 2) * np.sin(pitch / 2) * np.cos(
-            yaw / 2)
-        qw = np.cos(roll / 2) * np.cos(pitch / 2) * np.cos(yaw / 2) + np.sin(roll / 2) * np.sin(pitch / 2) * np.sin(
-            yaw / 2)
-
-        return [qx, qy, qz, qw]

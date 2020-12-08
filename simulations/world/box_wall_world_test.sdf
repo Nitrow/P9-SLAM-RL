@@ -30,7 +30,7 @@
       </ode>
       <real_time_factor>1</real_time_factor>
       <max_step_size>0.001</max_step_size>
-      <real_time_update_rate>5000</real_time_update_rate>
+      <real_time_update_rate>1000</real_time_update_rate>
     </physics>
 
 <!--  DOESN'T WORK, DOESN'T PUBLISH ODOMETRY FOR SOME REASON!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -541,7 +541,7 @@
 
       <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
         <alwaysOn>true</alwaysOn>
-        <updateRate>1000</updateRate>
+        <updateRate>100</updateRate>
         <leftJoint>left_wheel_joint</leftJoint>
         <rightJoint>right_wheel_joint</rightJoint>
         <wheelSeparation>0.450</wheelSeparation>
