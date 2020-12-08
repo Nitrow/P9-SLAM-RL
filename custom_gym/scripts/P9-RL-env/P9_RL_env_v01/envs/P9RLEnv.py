@@ -17,16 +17,7 @@ from tf.transformations import euler_from_quaternion
 
 
 
-def splitZones(gmap):
-    zoneValue = []
-    arr = np.asarray(gmap.data)
-    chunks = np.array_split(arr, 16)
 
-    for x in range(16):
-        zoneValue.append(np.sum(a=chunks[x], axis=0, dtype=np.int32))
-
-    state = zoneValue
-    return state
 
 
 class P9RLEnv(gym.Env):
@@ -64,7 +55,7 @@ class P9RLEnv(gym.Env):
 
         self.action_space = spaces.Box(low=np.array([0, -self.maxAngSpeed]),
                                        high=np.array([self.maxLinSpeed, self.maxAngSpeed]), dtype=np.float16)
-        self.observation_space = spaces.Box(low=-1, high=100, shape=(31,), dtype=np.float16)
+        self.observation_space = spaces.Box(low=-1, high=100, shape=(4111,), dtype=np.float16)
 
     def getOdometry(self, odom):
 
@@ -101,26 +92,38 @@ class P9RLEnv(gym.Env):
         self.pause_proxy()
         self.scan_range, minScan = self.scanRange(scan)
 
-        self.rewardMapOld = 49
+        self.rewardMapOld = 96
+        state, self.done = self.setStateAndDone(gmap, scan)
 
-        state = splitZones(gmap) + self.scan_range + [self.position.x, self.position.y, self.yaw]
         return state
 
     def step(self, action):
 
-        self.TimeoutCounter += 1
-
-        linear_vel = action[0]
-        ang_vel = action[1]
-
-        vel_cmd = Twist()
-        vel_cmd.linear.x = linear_vel
-        vel_cmd.angular.z = ang_vel
-        self.pub.publish(vel_cmd)
-
         self.unpause_proxy()
 
-        scan = rospy.wait_for_message("/scan", LaserScan, timeout=1000)
+        robgoaly = action[1] - self.position.y
+        robgoalx = action[0] - self.position.x
+        goal_angle = math.atan2(robgoalx, robgoaly)
+
+        client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+        client.wait_for_server()
+
+        goal = MoveBaseGoal()
+        goal.target_pose.header.frame_id = 'vehicle_blue/odom'
+        goal.target_pose.header.stamp = rospy.Time.now()
+        goal.target_pose.pose.position.x = action[0] + self.position[0]
+        goal.target_pose.pose.position.y = action[1] + self.position[1]
+        goal.target_pose.pose.orientation.z = 0
+        goal.target_pose.pose.orientation.w = 1
+
+        client.send_goal(goal)
+        wait = client.wait_for_result()
+        if wait == "rejected":
+            os.system("rostopic pub /move_base/cancel actionlib_msgs/GoalID -- {}")
+            self.canselled = True
+
+        print(wait)
+
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)
 
         self.pause_proxy()
@@ -136,8 +139,11 @@ class P9RLEnv(gym.Env):
         self.rewardMapOld = self.rewardMap
 
         #self.reward += self.rewardObstacleProximity()
+        if self.canselled:
+            self.reward += -100
+            self.canselled = False
         if done:
-            self.reward += -10000
+            self.reward += -100
         return self.reward
 
     def render(self, mode='human'):
@@ -149,9 +155,11 @@ class P9RLEnv(gym.Env):
 
         done = False
         self.scan_range, minScan = self.scanRange(scan)
-        if minScan < self.collisionParam or self.TimeoutCounter == 5000:
+        if minScan < self.collisionParam or self.TimeoutCounter == 100:
             done = True
-        state = splitZones(gmap) + self.scan_range + [self.position.x, self.position.y, self.yaw]
+
+        self.splitZones(gmap)
+        state = self.zoneValue + self.scan_range + [self.position.x, self.position.y, self.yaw]
 
         return state, done
 
@@ -173,3 +181,26 @@ class P9RLEnv(gym.Env):
 
         minScan = min(list(filter(lambda a: a != 0, scan_range[:])))
         return scan_range, minScan
+
+    def splitZones(self, gmap):
+        self.zoneValue = []
+        arr = np.asarray(gmap.data)
+        chunks = np.array_split(arr, 4096)
+
+        for x in range(4096):
+            self.zoneValue.append(np.sum(a=chunks[x], axis=0, dtype=np.int32))
+
+        np.array(self.zoneValue) > -1
+
+    def euler_to_quaternion(yaw, pitch, roll):
+
+        qx = np.sin(roll / 2) * np.cos(pitch / 2) * np.cos(yaw / 2) - np.cos(roll / 2) * np.sin(pitch / 2) * np.sin(
+            yaw / 2)
+        qy = np.cos(roll / 2) * np.sin(pitch / 2) * np.cos(yaw / 2) + np.sin(roll / 2) * np.cos(pitch / 2) * np.sin(
+            yaw / 2)
+        qz = np.cos(roll / 2) * np.cos(pitch / 2) * np.sin(yaw / 2) - np.sin(roll / 2) * np.sin(pitch / 2) * np.cos(
+            yaw / 2)
+        qw = np.cos(roll / 2) * np.cos(pitch / 2) * np.cos(yaw / 2) + np.sin(roll / 2) * np.sin(pitch / 2) * np.sin(
+            yaw / 2)
+
+        return [qx, qy, qz, qw]
