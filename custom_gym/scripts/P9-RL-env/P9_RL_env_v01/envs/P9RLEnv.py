@@ -54,6 +54,9 @@ class P9RLEnv(gym.Env):
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
         self.pause_proxy = rospy.ServiceProxy('gazebo/pause_physics', Empty)
 
+        self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+        self.client.wait_for_server()
+
         self.sub_odom = rospy.Subscriber('/vehicle_blue/odom', Odometry, self.getOdometry)
 
         self.action_space = spaces.Box(low=np.array([-self.maxAngularAction]),
@@ -77,10 +80,11 @@ class P9RLEnv(gym.Env):
         self.TimeoutCounter = 0
 
         if self.done is True:
-            rospy.wait_for_service('gazebo/reset_model')
+            rospy.wait_for_service('/gazebo/reset_world')
 
             try:
                 self.reset_proxy()
+
             except rospy.ServiceException as e:
                 print("gazebo/reset_simulation service call failed")
 
@@ -90,8 +94,8 @@ class P9RLEnv(gym.Env):
 
         self.unpause_proxy()
         time.sleep(1)
-        scan = rospy.wait_for_message("/scan", LaserScan, timeout=1000)
-        gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)
+        scan = rospy.wait_for_message("/scan", LaserScan, timeout=1)
+        gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1)
 
         self.pause_proxy()
         self.scan_range, minScan = self.scanRange(scan)
@@ -99,15 +103,20 @@ class P9RLEnv(gym.Env):
         self.rewardMapOld = 96
         state, self.done = self.setStateAndDone(gmap, scan)
 
+
+
+
+
         return state
 
     def step(self, action):
 
+
+        self.client.cancel_all_goals()
         self.unpause_proxy()
 
-        self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-        self.client.wait_for_server()
 
+        rospy.sleep(0.1)
         goal = MoveBaseGoal()
         goal.target_pose.header.frame_id = "vehicle_blue/base_link"
         goal.target_pose.header.stamp = rospy.Time.now()
@@ -120,6 +129,8 @@ class P9RLEnv(gym.Env):
 
         self.client.send_goal(goal)
         self.client.wait_for_result()
+        result = self.client.get_result()
+
 
         scan = rospy.wait_for_message("/scan", LaserScan, timeout=1000)
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)
