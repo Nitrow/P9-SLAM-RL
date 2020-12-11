@@ -16,6 +16,6 @@ global_costmap:
   static_map: false
   rolling_window: true
   inflation_radius: 0.1
-  resolution: 0.1
+  resolution: 0.5
   plugins: 
       - {name: static_layer,       type: "costmap_2d::StaticLayer"}

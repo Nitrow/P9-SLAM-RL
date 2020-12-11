@@ -17,6 +17,8 @@ from tf.transformations import quaternion_from_euler
 import actionlib
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal, actionlib_msgs
 import math
+from gazebo_msgs.msg import ModelState
+from gazebo_msgs.srv import SetModelState
 
 
 
@@ -79,21 +81,30 @@ class P9RLEnv(gym.Env):
 
         self.TimeoutCounter = 0
 
-        if self.done is True:
-            rospy.wait_for_service('/gazebo/reset_world')
+        state_msg = ModelState()
+        state_msg.model_name = 'vehicle_blue'
+        state_msg.pose.position.x = 0
+        state_msg.pose.position.y = 0
+        state_msg.pose.position.z = 0
+        state_msg.pose.orientation.x = 0
+        state_msg.pose.orientation.y = 0
+        state_msg.pose.orientation.z = 0
+        state_msg.pose.orientation.w = 1
 
-            try:
-                self.reset_proxy()
+        rospy.wait_for_service('/gazebo/set_model_state')
 
-            except rospy.ServiceException as e:
-                print("gazebo/reset_simulation service call failed")
 
-            self.pub2.publish("reset")
+        set_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
+        resp = set_state(state_msg)
 
-            self.done = False
+        self.pub2.publish("reset")
+
+        self.done = False
+
+
 
         self.unpause_proxy()
-        time.sleep(1)
+        time.sleep(3)
         scan = rospy.wait_for_message("/scan", LaserScan, timeout=1)
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1)
 
@@ -111,12 +122,14 @@ class P9RLEnv(gym.Env):
 
     def step(self, action):
 
-
-        self.client.cancel_all_goals()
         self.unpause_proxy()
 
 
-        rospy.sleep(0.1)
+        self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+        self.client.wait_for_server()
+
+
+
         goal = MoveBaseGoal()
         goal.target_pose.header.frame_id = "vehicle_blue/base_link"
         goal.target_pose.header.stamp = rospy.Time.now()
@@ -128,9 +141,14 @@ class P9RLEnv(gym.Env):
         goal.target_pose.pose.orientation.w = quat[3]
 
         self.client.send_goal(goal)
-        self.client.wait_for_result()
-        result = self.client.get_result()
+        wait = self.client.wait_for_result()
 
+        if not wait:
+            time.sleep(1)
+            self.client.wait_for_result()
+
+        self.client.get_result()
+        self.unpause_proxy()
 
         scan = rospy.wait_for_message("/scan", LaserScan, timeout=1000)
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)
@@ -138,6 +156,7 @@ class P9RLEnv(gym.Env):
         self.pause_proxy()
         state, self.done = self.setStateAndDone(gmap, scan)
         reward = self.setReward(self.done, gmap)
+        print("step")
         return [state, reward, self.done, {}]
 
     def setReward(self, done, gmap):
