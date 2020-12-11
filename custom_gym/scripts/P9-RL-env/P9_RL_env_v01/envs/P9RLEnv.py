@@ -21,16 +21,11 @@ from gazebo_msgs.msg import ModelState
 from gazebo_msgs.srv import SetModelState
 
 
-
-
-
-
-
 class P9RLEnv(gym.Env):
 
     def __init__(self):
-        self.safetyLimit = 1
-        self.collisionParam = 1
+        self.safetyLimit = 1.3
+        self.collisionParam = 1.3
         self.obsProximityParam = 5
         self.scan_range = []
         rospy.init_node('RLEnv', anonymous=True)
@@ -50,7 +45,7 @@ class P9RLEnv(gym.Env):
 
         self.pub = rospy.Publisher('/vehicle_blue/cmd_vel', Twist, queue_size=10)
         self.pub2 = rospy.Publisher('/syscommand', String, queue_size=1)
-        self.maxAngularAction = 60
+        self.maxAngularAction = 90
 
         self.reset_proxy = rospy.ServiceProxy('gazebo/reset_simulation', Empty)
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
@@ -133,8 +128,8 @@ class P9RLEnv(gym.Env):
         goal = MoveBaseGoal()
         goal.target_pose.header.frame_id = "vehicle_blue/base_link"
         goal.target_pose.header.stamp = rospy.Time.now()
-        goal.target_pose.pose.position.x = 1 * math.cos(action[0])
-        goal.target_pose.pose.position.y = 1 * math.sin(action[0])
+        goal.target_pose.pose.position.x = 0.5 * math.cos(action[0])
+        goal.target_pose.pose.position.y = 0.5 * math.sin(action[0])
 
         quat = quaternion_from_euler(0, 0, action[0])
         goal.target_pose.pose.orientation.z = quat[2]
