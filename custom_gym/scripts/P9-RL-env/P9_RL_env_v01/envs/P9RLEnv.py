@@ -21,11 +21,16 @@ from gazebo_msgs.msg import ModelState
 from gazebo_msgs.srv import SetModelState
 
 
+
+
+
+
+
 class P9RLEnv(gym.Env):
 
     def __init__(self):
-        self.safetyLimit = 1.3
-        self.collisionParam = 1.3
+        self.safetyLimit = 1
+        self.collisionParam = 1
         self.obsProximityParam = 5
         self.scan_range = []
         rospy.init_node('RLEnv', anonymous=True)
@@ -119,31 +124,23 @@ class P9RLEnv(gym.Env):
 
         self.unpause_proxy()
 
-
         self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
         self.client.wait_for_server()
-
-
 
         goal = MoveBaseGoal()
         goal.target_pose.header.frame_id = "vehicle_blue/base_link"
         goal.target_pose.header.stamp = rospy.Time.now()
-        goal.target_pose.pose.position.x = 0.5 * math.cos(action[0])
-        goal.target_pose.pose.position.y = 0.5 * math.sin(action[0])
+        goal.target_pose.pose.position.x = 1 * math.cos(action[0])
+        goal.target_pose.pose.position.y = 1 * math.sin(action[0])
 
         quat = quaternion_from_euler(0, 0, action[0])
         goal.target_pose.pose.orientation.z = quat[2]
         goal.target_pose.pose.orientation.w = quat[3]
 
         self.client.send_goal(goal)
-        wait = self.client.wait_for_result()
-
-        if not wait:
-            time.sleep(1)
-            self.client.wait_for_result()
+        self.client.wait_for_result()
 
         self.client.get_result()
-        self.unpause_proxy()
 
         scan = rospy.wait_for_message("/scan", LaserScan, timeout=1000)
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)

@@ -7,7 +7,10 @@
    <rosparam file="$(find navigation)/params/local_costmap_params.yaml" command="load" />
    <rosparam file="$(find navigation)/params/global_costmap_params.yaml" command="load" />
    <rosparam file="$(find navigation)/params/base_local_planner_params.yaml" command="load" />
+   <param name="recovery_behavior_enabled" value="false"/>
+   <param name="clearing_rotation_allowed" value="false"/>
    <remap from="/cmd_vel" to="/vehicle_blue/cmd_vel"/>
    <remap from="/odom" to="/vehicle_blue/odom"/>
+   
  </node>
  </launch>
