@@ -8,7 +8,7 @@ TrajectoryPlannerROS:
  acc_lim_x: 2.5
  acc_lim_y: 2.5
 
- xy_goal_tolerance: 0.1
+ xy_goal_tolerance: 0.3
  yaw_goal_tolerance: 1
 
  #sim_time: 50

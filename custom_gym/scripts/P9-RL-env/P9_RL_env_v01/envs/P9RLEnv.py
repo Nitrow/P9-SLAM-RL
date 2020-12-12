@@ -63,7 +63,7 @@ class P9RLEnv(gym.Env):
 
         self.action_space = spaces.Box(low=np.array([-self.maxAngularAction]),
                                        high=np.array([self.maxAngularAction]), dtype=np.float16)
-        self.observation_space = spaces.Box(low=-1, high=100, shape=(4099,), dtype=np.float16)
+        self.observation_space = spaces.Box(low=-1, high=100, shape=(4111,), dtype=np.float16)
 
     def getOdometry(self, odom):
 
@@ -104,9 +104,9 @@ class P9RLEnv(gym.Env):
 
 
         self.unpause_proxy()
-        time.sleep(3)
-        scan = rospy.wait_for_message("/scan", LaserScan, timeout=1)
-        gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1)
+        time.sleep(1)
+        scan = rospy.wait_for_message("/scan", LaserScan, timeout=1000)
+        gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)
 
         self.pause_proxy()
         self.scan_range, minScan = self.scanRange(scan)
@@ -124,23 +124,23 @@ class P9RLEnv(gym.Env):
 
         self.unpause_proxy()
 
-        self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-        self.client.wait_for_server()
+        client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+        client.wait_for_server()
 
         goal = MoveBaseGoal()
         goal.target_pose.header.frame_id = "vehicle_blue/base_link"
         goal.target_pose.header.stamp = rospy.Time.now()
-        goal.target_pose.pose.position.x = 1 * math.cos(action[0])
-        goal.target_pose.pose.position.y = 1 * math.sin(action[0])
+        goal.target_pose.pose.position.x = 0.5 * math.cos(action[0])
+        goal.target_pose.pose.position.y = 0.5 * math.sin(action[0])
 
         quat = quaternion_from_euler(0, 0, action[0])
         goal.target_pose.pose.orientation.z = quat[2]
         goal.target_pose.pose.orientation.w = quat[3]
 
-        self.client.send_goal(goal)
-        self.client.wait_for_result()
+        client.send_goal(goal)
+        client.wait_for_result()
 
-        self.client.get_result()
+        client.get_result()
 
         scan = rospy.wait_for_message("/scan", LaserScan, timeout=1000)
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)
@@ -175,7 +175,7 @@ class P9RLEnv(gym.Env):
             done = True
 
         self.splitZones(gmap)
-        state = self.zoneValue + [self.position.x, self.position.y, self.yaw]
+        state = self.zoneValue + self.scan_range + [self.position.x, self.position.y, self.yaw]
 
         return state, done
 
