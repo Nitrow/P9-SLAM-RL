@@ -19,7 +19,7 @@
     pkg="tf2_ros"
     type="static_transform_publisher" 
     name="lidar_tf"
-    args="-0.15   0 0.45   0 0 0   vehicle_blue/base_link lidar_link">
+    args="0   0 0.2   0 0 0   vehicle_blue/base_link lidar_link">
   </node>
 
 

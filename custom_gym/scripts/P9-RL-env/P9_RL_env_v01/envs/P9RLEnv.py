@@ -20,16 +20,10 @@ import math
 from gazebo_msgs.msg import ModelState
 from gazebo_msgs.srv import SetModelState
 
-
-
-
-
-
-
 class P9RLEnv(gym.Env):
 
     def __init__(self):
-        self.safetyLimit = 1
+        self.safetyLimit = 2
         self.collisionParam = 1
         self.obsProximityParam = 5
         self.scan_range = []
@@ -50,7 +44,7 @@ class P9RLEnv(gym.Env):
 
         self.pub = rospy.Publisher('/vehicle_blue/cmd_vel', Twist, queue_size=10)
         self.pub2 = rospy.Publisher('/syscommand', String, queue_size=1)
-        self.maxAngularAction = 90
+        self.maxAngularAction = 1.57
 
         self.reset_proxy = rospy.ServiceProxy('gazebo/reset_simulation', Empty)
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
@@ -85,7 +79,7 @@ class P9RLEnv(gym.Env):
         state_msg.model_name = 'vehicle_blue'
         state_msg.pose.position.x = 0
         state_msg.pose.position.y = 0
-        state_msg.pose.position.z = 0
+        state_msg.pose.position.z = 0.2
         state_msg.pose.orientation.x = 0
         state_msg.pose.orientation.y = 0
         state_msg.pose.orientation.z = 0
@@ -98,13 +92,12 @@ class P9RLEnv(gym.Env):
         resp = set_state(state_msg)
 
         self.pub2.publish("reset")
-
+        time.sleep(0.5)
         self.done = False
 
 
 
         self.unpause_proxy()
-        time.sleep(1)
         scan = rospy.wait_for_message("/scan", LaserScan, timeout=1000)
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)
 
@@ -114,18 +107,9 @@ class P9RLEnv(gym.Env):
         self.rewardMapOld = 96
         state, self.done = self.setStateAndDone(gmap, scan)
 
-
-
-
-
         return state
 
     def step(self, action):
-
-        self.unpause_proxy()
-
-        client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
-        client.wait_for_server()
 
         goal = MoveBaseGoal()
         goal.target_pose.header.frame_id = "vehicle_blue/base_link"
@@ -137,29 +121,26 @@ class P9RLEnv(gym.Env):
         goal.target_pose.pose.orientation.z = quat[2]
         goal.target_pose.pose.orientation.w = quat[3]
 
-        client.send_goal(goal)
-        client.wait_for_result()
-
-        client.get_result()
-
+        self.client.send_goal(goal)
+        self.unpause_proxy()
+        self.client.wait_for_result()
+        self.client.get_result()
         scan = rospy.wait_for_message("/scan", LaserScan, timeout=1000)
         gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)
 
         self.pause_proxy()
         state, self.done = self.setStateAndDone(gmap, scan)
         reward = self.setReward(self.done, gmap)
-        print("step")
         return [state, reward, self.done, {}]
 
     def setReward(self, done, gmap):
+        if done == False:
 
-        self.rewardMap = np.sum(np.array(gmap.data) > -1, axis=0)
-        self.reward = self.rewardMap - self.rewardMapOld
-        self.rewardMapOld = self.rewardMap
+            self.rewardMap = np.sum(np.array(gmap.data) > -1, axis=0)
+            self.reward += self.rewardMap - self.rewardMapOld
+            self.rewardMapOld = self.rewardMap
 
-        #self.reward += self.rewardObstacleProximity()
-        if done:
-            self.reward += -100
+            self.reward += self.rewardObstacleProximity()
         return self.reward
 
     def render(self, mode='human'):
@@ -168,11 +149,16 @@ class P9RLEnv(gym.Env):
     def setStateAndDone(self, gmap, scan):
 
         # # Set state and done
-
+        self.reward = 0
         done = False
         self.scan_range, minScan = self.scanRange(scan)
-        if minScan < self.collisionParam or self.TimeoutCounter == 100:
+        if minScan < self.collisionParam:
+            self.reward += -100
             done = True
+        if self.TimeoutCounter == 100:
+            done = True
+
+
 
         self.splitZones(gmap)
         state = self.zoneValue + self.scan_range + [self.position.x, self.position.y, self.yaw]
