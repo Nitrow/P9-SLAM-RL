@@ -79,7 +79,7 @@ class P9RLEnv(gym.Env):
         state_msg.model_name = 'vehicle_blue'
         state_msg.pose.position.x = 0
         state_msg.pose.position.y = 0
-        state_msg.pose.position.z = 0.2
+        state_msg.pose.position.z = 0.35
         state_msg.pose.orientation.x = 0
         state_msg.pose.orientation.y = 0
         state_msg.pose.orientation.z = 0
@@ -140,7 +140,7 @@ class P9RLEnv(gym.Env):
             self.reward += self.rewardMap - self.rewardMapOld
             self.rewardMapOld = self.rewardMap
 
-            self.reward += self.rewardObstacleProximity()
+            #self.reward += self.rewardObstacleProximity()
         return self.reward
 
     def render(self, mode='human'):

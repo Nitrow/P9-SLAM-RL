@@ -8,15 +8,14 @@ from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
 from stable_baselines3.common.cmd_util import make_vec_env
 
-
-#policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=[128, 128])
+policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=[256, 256, 256])
 
 
 env = make_vec_env('P9_RL-v0', n_envs=1)
 
-
-model = PPO(MlpPolicy, env, verbose=1, gamma=0.99, learning_rate=0.00005, tensorboard_log='/home/asger/P9/src/custom_gym/scripts')
-#model = PPO.load(simLogPath +'models/'+ simRunID, env,  verbose=0, tensorboard_log=tensorBoard/)
+model = PPO("MlpPolicy", env, policy_kwargs=policy_kwargs, verbose=1, batch_size=8, gamma=0.99, learning_rate=0.0001,
+            tensorboard_log='/home/asger/P9/src/custom_gym/scripts')
+# model = PPO.load(simLogPath +'models/'+ simRunID, env,  verbose=0, tensorboard_log=tensorBoard/)
 model.learn(total_timesteps=2000000, log_interval=1)
 print('Training finished...')
 model.save('/home/asger/P9/src/custom_gym/model')
