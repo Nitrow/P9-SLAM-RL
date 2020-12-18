@@ -19,6 +19,8 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal, actionlib_msgs
 import math
 from gazebo_msgs.msg import ModelState
 from gazebo_msgs.srv import SetModelState
+import sys
+np.set_printoptions(threshold=sys.maxsize)
 
 class P9RLEnv(gym.Env):
 
@@ -57,7 +59,7 @@ class P9RLEnv(gym.Env):
 
         self.action_space = spaces.Box(low=np.array([-self.maxAngularAction]),
                                        high=np.array([self.maxAngularAction]), dtype=np.float16)
-        self.observation_space = spaces.Box(low=-1, high=100, shape=(4099,), dtype=np.float16)
+        self.observation_space = spaces.Box(low=-1, high=100, shape=(19,), dtype=np.float16)
 
     def getOdometry(self, odom):
 
@@ -138,8 +140,8 @@ class P9RLEnv(gym.Env):
     def setReward(self, done, gmap):
         if done == False:
 
-            self.rewardMap = np.sum(np.array(gmap.data) > -1, axis=0)
-            self.reward += self.rewardMap - self.rewardMapOld
+            self.rewardMap = np.sum(np.array(gmap.data) == -1, axis=0)
+            self.reward += -self.rewardMap + self.rewardMapOld
             self.rewardMapOld = self.rewardMap
 
             #self.reward += self.rewardObstacleProximity()
@@ -157,7 +159,7 @@ class P9RLEnv(gym.Env):
         if minScan < self.collisionParam:
             self.reward += -100
             done = True
-        if self.TimeoutCounter == 100:
+        if self.TimeoutCounter == 200:
             done = True
 
 
@@ -186,12 +188,27 @@ class P9RLEnv(gym.Env):
         minScan = min(list(filter(lambda a: a != 0, scan_range[:])))
         return scan_range, minScan
 
+    def split(self, array, nrows, ncols):
+        """Split a matrix into sub-matrices."""
+        r, h = array.shape
+        return (array.reshape(h // nrows, nrows, -1, ncols)
+                .swapaxes(1, 2)
+                .reshape(-1, nrows, ncols))
+
     def splitZones(self, gmap):
         self.zoneValue = []
-        arr = np.asarray(gmap.data)
-        chunks = np.array_split(arr, 4096)
+        x = np.asarray(gmap.data)
 
-        for x in range(4096):
-            self.zoneValue.append(np.sum(a=chunks[x], axis=0, dtype=np.int32))
+        map_size = np.size(x)
+        nr_split = 16
+
+        z = np.array(x).reshape(math.trunc(math.sqrt(map_size)), math.trunc(math.sqrt(map_size)))
+        A = self.split(z, nr_split, nr_split)
+
+        for x in range(16):
+            self.zoneValue.append(np.sum(a=A[x]))
+
+
+
 
 

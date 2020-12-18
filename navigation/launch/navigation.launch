@@ -4,7 +4,7 @@
   <param name="GlobalPlanner/use_dijkstra" value="true"/>
   <param name="GlobalPlanner/allow_unknown" value="false"/>
   <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS"/>
-  <param name="planner_frequency" value="10"/>
+  <param name="planner_frequency" value="0"/>
   <param name="planner_patience" value="0"/>
   <param name="controller_frequency" value="10"/>
   <param name="controller_patience" value="10.0"/>

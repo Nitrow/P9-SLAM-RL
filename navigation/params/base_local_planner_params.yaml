@@ -1,14 +1,14 @@
 TebLocalPlannerROS:
 
  odom_topic: vehicle_blue/base_link
- map_frame: map
+ map_frame: vehicle_blue/odom
 
 # Robot
- acc_lim_x: 2
- acc_lim_theta: 2
- max_vel_x: 2
- max_vel_x_backwards: 2
- max_vel_theta: 2
+ acc_lim_x: 1
+ acc_lim_theta: 1
+ max_vel_x: 1
+ max_vel_x_backwards: 1
+ max_vel_theta: 1
  min_turning_radius: 0.0
  max_vel_y: 0.0
  acc_lim_y: 0.0
@@ -43,10 +43,10 @@ TebLocalPlannerROS:
 
 # Obstacles
  min_obstacle_dist: 0
- include_costmap_obstacles: true
+ include_costmap_obstacles: false
  costmap_obstacles_behind_robot_dist: 0.75
  obstacle_poses_affected: 30
- inflation_dist: 0.15
+ inflation_dist: 0
  dynamic_obstacle_inflation_distance: 0.46
  include_dynamic_obstacles: false
  legacy_obstacle_association: false
