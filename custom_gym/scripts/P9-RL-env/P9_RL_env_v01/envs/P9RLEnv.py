@@ -135,13 +135,14 @@ class P9RLEnv(gym.Env):
         self.pause_proxy()
         state, self.done = self.setStateAndDone(gmap, scan)
         reward = self.setReward(self.done, gmap)
+        print(reward)
         return [state, reward, self.done, {}]
 
     def setReward(self, done, gmap):
         if done == False:
 
             self.rewardMap = np.sum(np.array(gmap.data) > -1, axis=0)
-            self.reward += -self.rewardMap + self.rewardMapOld
+            self.reward += self.rewardMap - self.rewardMapOld
             self.rewardMapOld = self.rewardMap
 
             #self.reward += self.rewardObstacleProximity()
