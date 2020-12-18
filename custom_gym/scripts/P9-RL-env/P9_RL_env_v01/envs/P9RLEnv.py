@@ -59,7 +59,7 @@ class P9RLEnv(gym.Env):
 
         self.action_space = spaces.Box(low=np.array([-self.maxAngularAction]),
                                        high=np.array([self.maxAngularAction]), dtype=np.float16)
-        self.observation_space = spaces.Box(low=-1, high=100, shape=(19,), dtype=np.float16)
+        self.observation_space = spaces.Box(low=-1, high=100, shape=(259,), dtype=np.float16)
 
     def getOdometry(self, odom):
 
@@ -140,7 +140,7 @@ class P9RLEnv(gym.Env):
     def setReward(self, done, gmap):
         if done == False:
 
-            self.rewardMap = np.sum(np.array(gmap.data) == -1, axis=0)
+            self.rewardMap = np.sum(np.array(gmap.data) > -1, axis=0)
             self.reward += -self.rewardMap + self.rewardMapOld
             self.rewardMapOld = self.rewardMap
 
@@ -200,13 +200,17 @@ class P9RLEnv(gym.Env):
         x = np.asarray(gmap.data)
 
         map_size = np.size(x)
-        nr_split = 16
+        nr_split = 4
 
         z = np.array(x).reshape(math.trunc(math.sqrt(map_size)), math.trunc(math.sqrt(map_size)))
         A = self.split(z, nr_split, nr_split)
 
-        for x in range(16):
+
+
+        for x in range(256):
             self.zoneValue.append(np.sum(a=A[x]))
+
+        print(self.zoneValue)
 
 
 
