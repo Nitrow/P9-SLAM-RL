@@ -210,7 +210,6 @@ class P9RLEnv(gym.Env):
         for x in range(256):
             self.zoneValue.append(np.sum(a=A[x]))
 
-        print(self.zoneValue)
 
 
 
