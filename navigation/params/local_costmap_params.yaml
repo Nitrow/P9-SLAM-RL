@@ -12,8 +12,8 @@ local_costmap:
   publish_frequency: 2
   static_map: false
   rolling_window: true
-  width: 3
-  height: 3
+  width: 6
+  height: 6
   resolution: 0.1
   inflation_radius: 0
   plugins: 

@@ -23,8 +23,8 @@ from gazebo_msgs.srv import SetModelState
 class P9RLEnv(gym.Env):
 
     def __init__(self):
-        self.safetyLimit = 2
-        self.collisionParam = 1
+        self.safetyLimit = 0.5
+        self.collisionParam = 0.5
         self.obsProximityParam = 5
         self.scan_range = []
         rospy.init_node('RLEnv', anonymous=True)
@@ -44,7 +44,7 @@ class P9RLEnv(gym.Env):
 
         self.pub = rospy.Publisher('/vehicle_blue/cmd_vel', Twist, queue_size=10)
         self.pub2 = rospy.Publisher('/syscommand', String, queue_size=1)
-        self.maxAngularAction = 1.57
+        self.maxAngularAction = 3.14
 
         self.reset_proxy = rospy.ServiceProxy('gazebo/reset_simulation', Empty)
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
@@ -57,7 +57,7 @@ class P9RLEnv(gym.Env):
 
         self.action_space = spaces.Box(low=np.array([-self.maxAngularAction]),
                                        high=np.array([self.maxAngularAction]), dtype=np.float16)
-        self.observation_space = spaces.Box(low=-1, high=100, shape=(4111,), dtype=np.float16)
+        self.observation_space = spaces.Box(low=-1, high=100, shape=(4099,), dtype=np.float16)
 
     def getOdometry(self, odom):
 
@@ -111,11 +111,13 @@ class P9RLEnv(gym.Env):
 
     def step(self, action):
 
+        self.TimeoutCounter += 1
+
         goal = MoveBaseGoal()
         goal.target_pose.header.frame_id = "vehicle_blue/base_link"
         goal.target_pose.header.stamp = rospy.Time.now()
-        goal.target_pose.pose.position.x = 0.5 * math.cos(action[0])
-        goal.target_pose.pose.position.y = 0.5 * math.sin(action[0])
+        goal.target_pose.pose.position.x = 0.5* math.cos(action[0])
+        goal.target_pose.pose.position.y = 0.5* math.sin(action[0])
 
         quat = quaternion_from_euler(0, 0, action[0])
         goal.target_pose.pose.orientation.z = quat[2]
@@ -161,7 +163,7 @@ class P9RLEnv(gym.Env):
 
 
         self.splitZones(gmap)
-        state = self.zoneValue + self.scan_range + [self.position.x, self.position.y, self.yaw]
+        state = self.zoneValue  + [self.position.x, self.position.y, self.yaw]
 
         return state, done
 
