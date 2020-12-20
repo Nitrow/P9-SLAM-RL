@@ -108,17 +108,20 @@ class P9RLEnv(gym.Env):
             map_data[map_data == 100] = 255
             # Add square where robot is
 
-            map_data[int(self.y_in_map), int(self.x_in_map)] = 255
+            for i in range(2):
+                for j in range(2):
+                    map_data[int(self.y_in_map) + i, int(self.x_in_map) + j] = 255
+
             im = np.array(map_data, dtype=np.uint8)
 
             # resize and flip image
             self.horizontal_img = cv2.flip(im, 0)
 
-            #dim = (256, 256)
+            dim = (256, 256)
 
-            #resized = cv2.resize(self.horizontal_img, dim, interpolation=cv2.INTER_AREA)
-            #cv2.imshow('image', resized)
-            #cv2.waitKey(2)
+            resized = cv2.resize(self.horizontal_img, dim, interpolation=cv2.INTER_AREA)
+            cv2.imshow('image', resized)
+            cv2.waitKey(2)
 
     def getOdometry(self, data):
         self.current_x = data.pose.pose.position.x
@@ -159,7 +162,7 @@ class P9RLEnv(gym.Env):
         self.done = False
 
 
-        self.rewardMapOld = 96
+        self.rewardMapOld = 0
         state = self.horizontal_img
 
         return state
@@ -195,8 +198,8 @@ class P9RLEnv(gym.Env):
         return [state, reward, self.done, {}]
 
     def setReward(self):
-        self.rewardMap = np.sum(np.array(self.map) > -1, axis=0)
-        self.reward += self.rewardMap - self.rewardMapOld
+        self.rewardMap = np.sum(np.array(self.map) > -1)
+        self.reward = self.rewardMap - self.rewardMapOld
         self.rewardMapOld = self.rewardMap
 
         return self.reward
