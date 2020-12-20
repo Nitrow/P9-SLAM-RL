@@ -20,12 +20,14 @@ import math
 from gazebo_msgs.msg import ModelState
 from gazebo_msgs.srv import SetModelState
 import sys
+import cv2
+from nav_msgs.msg import OccupancyGrid, MapMetaData, Odometry
 np.set_printoptions(threshold=sys.maxsize)
 
 class P9RLEnv(gym.Env):
 
     def __init__(self):
-        self.safetyLimit = 0.5
+        self.safetyLimit = 1
         self.collisionParam = 0.5
         self.obsProximityParam = 5
         self.scan_range = []
@@ -43,6 +45,24 @@ class P9RLEnv(gym.Env):
         self.done = False
         self.TimeoutCounter = 0
         self.lidarDiscretization = 30
+        self.minScan = 0
+
+        map_width = 0
+        map_height = 0
+
+        current_x = 0
+        current_y = 0
+
+        map_x_origin = 0
+        map_y_origin = 0
+
+        x_in_map = 0
+        y_in_map = 0
+
+        resolution = 0
+
+        horizontal_img = np.array([])
+
 
         self.pub = rospy.Publisher('/vehicle_blue/cmd_vel', Twist, queue_size=10)
         self.pub2 = rospy.Publisher('/syscommand', String, queue_size=1)
@@ -55,21 +75,62 @@ class P9RLEnv(gym.Env):
         self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
         self.client.wait_for_server()
 
-        self.sub_odom = rospy.Subscriber('/vehicle_blue/odom', Odometry, self.getOdometry)
+        rospy.Subscriber('/vehicle_blue/odom', Odometry, self.getOdometry)
+        rospy.Subscriber("/map_metadata", MapMetaData, self.meta_callback)
+        rospy.Subscriber("/map", OccupancyGrid, self.map_callback)
+        rospy.Subscriber("/scan", LaserScan, self.lidar_callback)
 
         self.action_space = spaces.Box(low=np.array([-self.maxAngularAction]),
                                        high=np.array([self.maxAngularAction]), dtype=np.float16)
-        self.observation_space = spaces.Box(low=-1, high=100, shape=(259,), dtype=np.float16)
+        self.observation_space = spaces.Box(0, 255, (64, 64), dtype=np.uint8)
 
-    def getOdometry(self, odom):
 
-        self.position = odom.pose.pose.position
-        orientation = odom.pose.pose.orientation
-        orientation_list = [orientation.x, orientation.y, orientation.z, orientation.w]
-        _, _, self.yaw = euler_from_quaternion(orientation_list)
 
-        return self.position, self.yaw
+    def meta_callback(self, data):
+        self.map_width = data.width
+        self.map_height = data.height
+        self.map_x_origin = data.origin.position.x
+        self.map_y_origin = data.origin.position.y
+        self.resolution = data.resolution
 
+    def map_callback(self, data):
+
+        self.map = np.array(data.data)
+
+        map_data = np.array(data.data)
+
+        if (self.map_width * self.map_height != 0):
+            # turn 1D array into 2D array for image
+            map_data = np.reshape(map_data, (self.map_height, self.map_width))
+
+            # convert values in costmap
+            map_data[map_data == -1] = 150
+            map_data[map_data == 100] = 255
+            # Add square where robot is
+
+            map_data[int(self.y_in_map), int(self.x_in_map)] = 255
+            im = np.array(map_data, dtype=np.uint8)
+
+            # resize and flip image
+            self.horizontal_img = cv2.flip(im, 0)
+
+            #dim = (256, 256)
+
+            #resized = cv2.resize(self.horizontal_img, dim, interpolation=cv2.INTER_AREA)
+            #cv2.imshow('image', resized)
+            #cv2.waitKey(2)
+
+    def getOdometry(self, data):
+        self.current_x = data.pose.pose.position.x
+        self.current_y = data.pose.pose.position.y
+
+        # Convert position to be relative to bottom left of map
+        self.x_in_map = (self.current_x + 15) / 0.5
+        self.y_in_map = (self.current_y + 15) / 0.5
+
+
+    def lidar_callback(self, data):
+        self.minScan = min(list(filter(lambda a: a != 0, data.ranges[:])))
 
 
     def reset(self):
@@ -94,20 +155,12 @@ class P9RLEnv(gym.Env):
         resp = set_state(state_msg)
 
         self.pub2.publish("reset")
-        time.sleep(0.5)
+        time.sleep(1)
         self.done = False
 
 
-
-        self.unpause_proxy()
-        scan = rospy.wait_for_message("/scan", LaserScan, timeout=1000)
-        gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)
-
-        self.pause_proxy()
-        self.scan_range, minScan = self.scanRange(scan)
-
         self.rewardMapOld = 96
-        state, self.done = self.setStateAndDone(gmap, scan)
+        state = self.horizontal_img
 
         return state
 
@@ -118,8 +171,8 @@ class P9RLEnv(gym.Env):
         goal = MoveBaseGoal()
         goal.target_pose.header.frame_id = "vehicle_blue/base_link"
         goal.target_pose.header.stamp = rospy.Time.now()
-        goal.target_pose.pose.position.x = 0.5* math.cos(action[0])
-        goal.target_pose.pose.position.y = 0.5* math.sin(action[0])
+        goal.target_pose.pose.position.x = 0.5 * math.cos(action[0])
+        goal.target_pose.pose.position.y = 0.5 * math.sin(action[0])
 
         quat = quaternion_from_euler(0, 0, action[0])
         goal.target_pose.pose.orientation.z = quat[2]
@@ -129,89 +182,24 @@ class P9RLEnv(gym.Env):
         self.unpause_proxy()
         self.client.wait_for_result()
         self.client.get_result()
-        scan = rospy.wait_for_message("/scan", LaserScan, timeout=1000)
-        gmap = rospy.wait_for_message("/map", OccupancyGrid, timeout=1000)
+
 
         self.pause_proxy()
-        state, self.done = self.setStateAndDone(gmap, scan)
-        reward = self.setReward(self.done, gmap)
+
+        state = self.horizontal_img
+        reward = self.setReward()
+        print(reward)
+        if self.TimeoutCounter == 200000 or self.minScan < self.collisionParam:
+            self.done = True
+
         return [state, reward, self.done, {}]
 
-    def setReward(self, done, gmap):
-        if done == False:
+    def setReward(self):
+        self.rewardMap = np.sum(np.array(self.map) > -1, axis=0)
+        self.reward += self.rewardMap - self.rewardMapOld
+        self.rewardMapOld = self.rewardMap
 
-            self.rewardMap = np.sum(np.array(gmap.data) > -1, axis=0)
-            self.reward += self.rewardMap - self.rewardMapOld
-            self.rewardMapOld = self.rewardMap
-
-            #self.reward += self.rewardObstacleProximity()
         return self.reward
 
     def render(self, mode='human'):
         pass
-
-    def setStateAndDone(self, gmap, scan):
-
-        # # Set state and done
-        self.reward = 0
-        done = False
-        self.scan_range, minScan = self.scanRange(scan)
-        if minScan < self.collisionParam:
-            self.reward += -100
-            done = True
-        if self.TimeoutCounter == 200:
-            done = True
-
-
-
-        self.splitZones(gmap)
-        state = self.zoneValue  + [self.position.x, self.position.y, self.yaw]
-
-        return state, done
-
-
-
-    def rewardObstacleProximity(self):
-        closestObstacle = min(self.scan_range)
-        if closestObstacle <= self.safetyLimit:
-            return self.obsProximityParam * -(1 - (closestObstacle / self.safetyLimit))
-        else:
-            return 0
-    def scanRange(self, scan):
-    #
-        scan_range = []
-
-        for x in range(0, 360, self.lidarDiscretization):
-            end = x + self.lidarDiscretization
-            scan_range.append(min(scan.ranges[x:end]))
-
-        minScan = min(list(filter(lambda a: a != 0, scan_range[:])))
-        return scan_range, minScan
-
-    def split(self, array, nrows, ncols):
-        """Split a matrix into sub-matrices."""
-        r, h = array.shape
-        return (array.reshape(h // nrows, nrows, -1, ncols)
-                .swapaxes(1, 2)
-                .reshape(-1, nrows, ncols))
-
-    def splitZones(self, gmap):
-        self.zoneValue = []
-        x = np.asarray(gmap.data)
-
-        map_size = np.size(x)
-        nr_split = 4
-
-        z = np.array(x).reshape(math.trunc(math.sqrt(map_size)), math.trunc(math.sqrt(map_size)))
-        A = self.split(z, nr_split, nr_split)
-
-
-
-        for x in range(256):
-            self.zoneValue.append(np.sum(a=A[x]))
-
-
-
-
-
-

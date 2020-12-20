@@ -4,11 +4,11 @@ TebLocalPlannerROS:
  map_frame: vehicle_blue/odom
 
 # Robot
- acc_lim_x: 1
- acc_lim_theta: 1
- max_vel_x: 1
- max_vel_x_backwards: 1
- max_vel_theta: 1
+ acc_lim_x: 2
+ acc_lim_theta: 2
+ max_vel_x: 2
+ max_vel_x_backwards: 2
+ max_vel_theta: 2
  min_turning_radius: 0.0
  max_vel_y: 0.0
  acc_lim_y: 0.0
@@ -19,8 +19,8 @@ TebLocalPlannerROS:
 
 
 # GoalTolerance
- xy_goal_tolerance: 0.1
- yaw_goal_tolerance: 0.1
+ xy_goal_tolerance: 0.01
+ yaw_goal_tolerance: 0.01
  free_goal_vel: false
 
 
