@@ -145,7 +145,7 @@ class P9RLEnv(gym.Env):
 
     def reset(self):
         # RESET ENVIRONMENT
-
+        self.client.cancel_all_goals()
         self.TimeoutCounter = 0
 
         state_msg = ModelState()
@@ -165,14 +165,12 @@ class P9RLEnv(gym.Env):
         resp = set_state(state_msg)
 
         self.pub2.publish("reset")
-        time.sleep(1)
         self.done = False
-        self.client.cancel_all_goals()
 
         self.rewardMapOld = 98
 
         self.unpause_proxy()
-
+        time.sleep(0.1)
         self.pause_proxy()
         state = self.horizontal_img
 
@@ -204,7 +202,6 @@ class P9RLEnv(gym.Env):
         self.pause_proxy()
         state = self.horizontal_img
         reward = self.setReward()
-        print(reward)
         if self.TimeoutCounter == 200000 or self.minScan < self.collisionParam:
             self.done = True
 

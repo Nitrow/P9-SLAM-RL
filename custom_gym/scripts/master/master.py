@@ -3,7 +3,6 @@ import gym
 import P9_RL_env_v01
 import numpy as np
 import torch as th
-from P9_RL_env_v01.envs.P9RLEnv import P9RLEnv
 
 from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
@@ -14,9 +13,7 @@ from stable_baselines3.common.env_checker import check_env
 policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=[256, 256, 256])
 
 
-env = P9RLEnv()
-
-check_env(env)
+env = make_vec_env('P9_RL-v0', n_envs=1)
 
 model = PPO(CnnPolicy, env, verbose=1, batch_size=8, gamma=0.99, learning_rate=0.0001,
             tensorboard_log='/home/asger/P9/src/custom_gym/scripts')

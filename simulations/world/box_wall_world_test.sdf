@@ -30,7 +30,7 @@
       </ode>
       <real_time_factor>1</real_time_factor>
       <max_step_size>0.001</max_step_size>
-      <real_time_update_rate>3000</real_time_update_rate>
+      <real_time_update_rate>2000</real_time_update_rate>
     </physics>
 
 <!--  DOESN'T WORK, DOESN'T PUBLISH ODOMETRY FOR SOME REASON!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
