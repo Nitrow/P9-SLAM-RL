@@ -28,7 +28,7 @@ class P9RLEnv(gym.Env):
 
     def __init__(self):
         self.safetyLimit = 1
-        self.collisionParam = 0.5
+        self.collisionParam = 0.8
         self.obsProximityParam = 5
         self.scan_range = []
         rospy.init_node('RLEnv', anonymous=True)
@@ -66,7 +66,8 @@ class P9RLEnv(gym.Env):
 
         self.pub = rospy.Publisher('/vehicle_blue/cmd_vel', Twist, queue_size=10)
         self.pub2 = rospy.Publisher('/syscommand', String, queue_size=1)
-        self.maxAngularAction = 3.14
+        self.xaction = 0.5
+        self.yaction = 0.5
 
         self.reset_proxy = rospy.ServiceProxy('gazebo/reset_simulation', Empty)
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
@@ -80,9 +81,9 @@ class P9RLEnv(gym.Env):
         rospy.Subscriber("/map", OccupancyGrid, self.map_callback)
         rospy.Subscriber("/scan", LaserScan, self.lidar_callback)
 
-        self.action_space = spaces.Box(low=np.array([-self.maxAngularAction]),
-                                       high=np.array([self.maxAngularAction]), dtype=np.float16)
-        self.observation_space = spaces.Box(0, 255, (64, 64), dtype=np.uint8)
+        self.action_space = spaces.Box(low=np.array([-self.xaction, -self.yaction]),
+                                       high=np.array([self.xaction, self.yaction]), dtype=np.float16)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(64, 64, 3), dtype=np.uint8)
 
 
 
@@ -114,8 +115,14 @@ class P9RLEnv(gym.Env):
 
             im = np.array(map_data, dtype=np.uint8)
 
+            img = cv2.resize(im, (64, 64))
+
+            img2 =  cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+
+
             # resize and flip image
-            self.horizontal_img = cv2.flip(im, 0)
+            self.horizontal_img = cv2.flip(img2, 0)
+
 
             dim = (256, 256)
 
@@ -128,8 +135,8 @@ class P9RLEnv(gym.Env):
         self.current_y = data.pose.pose.position.y
 
         # Convert position to be relative to bottom left of map
-        self.x_in_map = (self.current_x + 15) / 0.5
-        self.y_in_map = (self.current_y + 15) / 0.5
+        self.x_in_map = (self.current_x + 15) / self.resolution
+        self.y_in_map = (self.current_y + 15) / self.resolution
 
 
     def lidar_callback(self, data):
@@ -160,9 +167,13 @@ class P9RLEnv(gym.Env):
         self.pub2.publish("reset")
         time.sleep(1)
         self.done = False
+        self.client.cancel_all_goals()
 
+        self.rewardMapOld = 98
 
-        self.rewardMapOld = 0
+        self.unpause_proxy()
+
+        self.pause_proxy()
         state = self.horizontal_img
 
         return state
@@ -170,35 +181,40 @@ class P9RLEnv(gym.Env):
     def step(self, action):
 
         self.TimeoutCounter += 1
-
         goal = MoveBaseGoal()
         goal.target_pose.header.frame_id = "vehicle_blue/base_link"
         goal.target_pose.header.stamp = rospy.Time.now()
-        goal.target_pose.pose.position.x = 0.5 * math.cos(action[0])
-        goal.target_pose.pose.position.y = 0.5 * math.sin(action[0])
+        #goal.target_pose.pose.position.x = 0.5 * math.cos(action[0])
+        goal.target_pose.pose.position.x = action[0]
+        goal.target_pose.pose.position.y = action[1]
 
-        quat = quaternion_from_euler(0, 0, action[0])
+        goal_angle = math.atan2(action[0], action[1])
+
+        quat = quaternion_from_euler(0, 0, goal_angle)
         goal.target_pose.pose.orientation.z = quat[2]
         goal.target_pose.pose.orientation.w = quat[3]
 
         self.client.send_goal(goal)
+
         self.unpause_proxy()
+
         self.client.wait_for_result()
         self.client.get_result()
 
-
         self.pause_proxy()
-
         state = self.horizontal_img
         reward = self.setReward()
         print(reward)
         if self.TimeoutCounter == 200000 or self.minScan < self.collisionParam:
             self.done = True
 
-        return [state, reward, self.done, {}]
+        return [state, float(reward), self.done, {}]
 
     def setReward(self):
         self.rewardMap = np.sum(np.array(self.map) > -1)
+        if self.rewardMap == self.rewardMapOld:
+            self.reward += -1
+
         self.reward = self.rewardMap - self.rewardMapOld
         self.rewardMapOld = self.rewardMap
 

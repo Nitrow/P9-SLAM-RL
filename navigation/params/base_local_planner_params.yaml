@@ -20,7 +20,7 @@ TebLocalPlannerROS:
 
 # GoalTolerance
  xy_goal_tolerance: 0.01
- yaw_goal_tolerance: 0.01
+ yaw_goal_tolerance: 6.28
  free_goal_vel: false
 
 
@@ -33,7 +33,7 @@ TebLocalPlannerROS:
  global_plan_viapoint_sep: -0.1
  max_global_plan_lookahead_dist: 1
  force_reinit_new_goal_dist: 1.0
- feasibility_check_no_poses: 5
+ feasibility_check_no_poses: 2
  publish_feedback: true
  shrink_horizon_backup: true
  allow_init_with_backwards_motion: true
@@ -56,8 +56,8 @@ TebLocalPlannerROS:
 # Optimization
  optimization_activate: true
  optimization_verbose: false
- no_inner_iterations: 6
- no_outer_iterations: 4
+ no_inner_iterations: 3
+ no_outer_iterations: 2
  penalty_epsilon: 0.075
  weight_max_vel_x: 2.6
  weight_max_vel_theta: 2.1
