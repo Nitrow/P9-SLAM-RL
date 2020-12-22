@@ -1,4 +1,5 @@
  <launch>
+  <param name="use_sim_time" value="true"/>
   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
   <param name="base_global_planner" value="global_planner/GlobalPlanner"/>
   <param name="GlobalPlanner/use_dijkstra" value="true"/>
@@ -6,8 +7,8 @@
   <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS"/>
   <param name="planner_frequency" value="0"/>
   <param name="planner_patience" value="0"/>
-  <param name="controller_frequency" value="20"/>
-  <param name="controller_patience" value="10.0"/>
+  <param name="controller_frequency" value="10"/>
+  <param name="controller_patience" value="10"/>
    <rosparam file="$(find navigation)/params/costmap_common_params.yaml" command="load" ns="global_costmap" />
    <rosparam file="$(find navigation)/params/costmap_common_params.yaml" command="load" ns="local_costmap" />
    <rosparam file="$(find navigation)/params/local_costmap_params.yaml" command="load" />

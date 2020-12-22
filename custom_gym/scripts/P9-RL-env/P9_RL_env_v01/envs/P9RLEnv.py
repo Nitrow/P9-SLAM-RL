@@ -2,16 +2,8 @@ import rospy
 import gym
 from gym import spaces
 import numpy as np
-from tf import TransformListener
-import os
-from nav_msgs.msg import Odometry
 import time
-from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import Twist, geometry_msgs
 from sensor_msgs.msg import LaserScan
-from std_msgs.msg import String
-from nav_msgs.srv import GetMap
-from std_srvs.srv import Empty
 from tf.transformations import euler_from_quaternion
 from tf.transformations import quaternion_from_euler
 import actionlib
@@ -22,13 +14,13 @@ from gazebo_msgs.srv import SetModelState
 import sys
 import cv2
 from nav_msgs.msg import OccupancyGrid, MapMetaData, Odometry
-np.set_printoptions(threshold=sys.maxsize)
+
 
 class P9RLEnv(gym.Env):
 
     def __init__(self):
-        self.safetyLimit = 1
-        self.collisionParam = 0.8
+        self.safetyLimit = 2
+        self.collisionParam = 1.3
         self.obsProximityParam = 5
         self.scan_range = []
         rospy.init_node('RLEnv', anonymous=True)
@@ -66,8 +58,7 @@ class P9RLEnv(gym.Env):
 
         self.pub = rospy.Publisher('/vehicle_blue/cmd_vel', Twist, queue_size=10)
         self.pub2 = rospy.Publisher('/syscommand', String, queue_size=1)
-        self.xaction = 0.5
-        self.yaction = 0.5
+        self.degreeAction = 3.14
 
         self.reset_proxy = rospy.ServiceProxy('gazebo/reset_simulation', Empty)
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
@@ -81,8 +72,10 @@ class P9RLEnv(gym.Env):
         rospy.Subscriber("/map", OccupancyGrid, self.map_callback)
         rospy.Subscriber("/scan", LaserScan, self.lidar_callback)
 
-        self.action_space = spaces.Box(low=np.array([-self.xaction, -self.yaction]),
-                                       high=np.array([self.xaction, self.yaction]), dtype=np.float16)
+        #self.action_space = spaces.Box(low=np.array([-self.degreeAction]),
+         #                              high=np.array([self.degreeAction]), dtype=np.float16)
+
+        self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=0, high=255, shape=(64, 64, 3), dtype=np.uint8)
 
 
@@ -115,20 +108,17 @@ class P9RLEnv(gym.Env):
 
             im = np.array(map_data, dtype=np.uint8)
 
-            img = cv2.resize(im, (64, 64))
-
-            img2 =  cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-
+            img =  cv2.cvtColor(im, cv2.COLOR_GRAY2BGR)
 
             # resize and flip image
-            self.horizontal_img = cv2.flip(img2, 0)
+            self.horizontal_img = cv2.flip(img, 0)
 
 
-            dim = (256, 256)
+           #dim = (256, 256)
 
-            resized = cv2.resize(self.horizontal_img, dim, interpolation=cv2.INTER_AREA)
-            cv2.imshow('image', resized)
-            cv2.waitKey(2)
+           # resized = cv2.resize(self.horizontal_img, dim, interpolation=cv2.INTER_AREA)
+            #cv2.imshow('image', self.horizontal_img)
+            #cv2.waitKey(2)
 
     def getOdometry(self, data):
         self.current_x = data.pose.pose.position.x
@@ -180,15 +170,14 @@ class P9RLEnv(gym.Env):
 
         self.TimeoutCounter += 1
         goal = MoveBaseGoal()
-        goal.target_pose.header.frame_id = "vehicle_blue/base_link"
+        goal.target_pose.header.frame_id = "vehicle_blue/odom"
         goal.target_pose.header.stamp = rospy.Time.now()
-        #goal.target_pose.pose.position.x = 0.5 * math.cos(action[0])
-        goal.target_pose.pose.position.x = action[0]
-        goal.target_pose.pose.position.y = action[1]
+        goal.target_pose.pose.position.x = 1 * math.cos(-3.14 + (1.57*action)) + self.current_x
+        goal.target_pose.pose.position.y = 1 * math.sin(-3.14 + (1.57*action)) + self.current_y
 
-        goal_angle = math.atan2(action[0], action[1])
+        #goal_angle = math.atan2(action[0], action[0])
 
-        quat = quaternion_from_euler(0, 0, goal_angle)
+        quat = quaternion_from_euler(0, 0, -3.14 + (1.57*action))
         goal.target_pose.pose.orientation.z = quat[2]
         goal.target_pose.pose.orientation.w = quat[3]
 
@@ -198,11 +187,11 @@ class P9RLEnv(gym.Env):
 
         self.client.wait_for_result()
         self.client.get_result()
-
+        time.sleep(0.1)
         self.pause_proxy()
         state = self.horizontal_img
         reward = self.setReward()
-        if self.TimeoutCounter == 200000 or self.minScan < self.collisionParam:
+        if self.TimeoutCounter == 200 or self.minScan < self.collisionParam:
             self.done = True
 
         return [state, float(reward), self.done, {}]
