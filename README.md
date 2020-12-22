@@ -56,6 +56,13 @@ $ sudo pip3 install -e .
 ```bash
 $ roslaunch simulation lidar.launch
 ```
+
+### Run the navigation ###
+
+```bash
+$ roslaunch navigation navigation.launch 
+```
+
 ### Run the trainer ###
 
 ```bash
