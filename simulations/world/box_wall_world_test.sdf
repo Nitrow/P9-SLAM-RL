@@ -82,14 +82,14 @@
         <collision name="collision1">
           <geometry>
             <box>
-              <size>0.2 20 2</size>
+              <size>1 1 0.01</size>
             </box>
           </geometry>
         </collision>
         <visual name="visual1">
           <geometry>
             <box>
-              <size>0.2 20 2</size>
+              <size>0.2 20 4</size>
             </box>
           </geometry>
         </visual>
@@ -102,14 +102,14 @@
         <collision name="collision1">
           <geometry>
             <box>
-              <size>0.2 20 2</size>
+              <size>1 1 0.01</size>
             </box>
           </geometry>
         </collision>
         <visual name="visual1">
           <geometry>
             <box>
-              <size>0.2 20 2</size>
+              <size>0.2 20 4</size>
             </box>
           </geometry>
         </visual>
@@ -122,14 +122,14 @@
         <collision name="collision1">
           <geometry>
             <box>
-              <size>20 0.2 2</size>
+              <size>1 1 0.01</size>
             </box>
           </geometry>
         </collision>
         <visual name="visual1">
           <geometry>
             <box>
-              <size>20 0.2 2</size>
+              <size>20 0.2 4</size>
             </box>
           </geometry>
         </visual>
@@ -142,14 +142,14 @@
         <collision name="collision1">
           <geometry>
             <box>
-              <size>20 0.2 2</size>
+              <size>1 1 0.01</size>
             </box>
           </geometry>
         </collision>
         <visual name="visual1">
           <geometry>
             <box>
-              <size>20 0.2 2</size>
+              <size>20 0.2 4</size>
             </box>
           </geometry>
         </visual>
@@ -162,14 +162,14 @@
         <collision name="collision1">
           <geometry>
             <box>
-              <size>1 1 1</size>
+              <size>1 1 0.01</size>
             </box>
           </geometry>
         </collision>
         <visual name="visual1">
           <geometry>
             <box>
-              <size>1 1 1</size>
+              <size>1 1 2</size>
             </box>
           </geometry>
         </visual>
@@ -182,14 +182,14 @@
         <collision name="collision1">
           <geometry>
             <box>
-              <size>1 1 1</size>
+              <size>1 1 0.01</size>
             </box>
           </geometry>
         </collision>
         <visual name="visual1">
           <geometry>
             <box>
-              <size>1 1 1</size>
+              <size>1 1 2</size>
             </box>
           </geometry>
         </visual>
@@ -202,14 +202,14 @@
         <collision name="collision1">
           <geometry>
             <box>
-              <size>1 1 1</size>
+              <size>1 1 0.01</size>
             </box>
           </geometry>
         </collision>
         <visual name="visual1">
           <geometry>
             <box>
-              <size>1 1 1</size>
+              <size>1 1 2</size>
             </box>
           </geometry>
         </visual>
@@ -222,14 +222,14 @@
         <collision name="collision1">
           <geometry>
             <box>
-              <size>1 1 1</size>
+              <size>1 1 0.01</size>
             </box>
           </geometry>
         </collision>
         <visual name="visual1">
           <geometry>
             <box>
-              <size>1 1 1</size>
+              <size>1 1 2</size>
             </box>
           </geometry>
         </visual>
@@ -242,7 +242,7 @@
       <link name='chassis'>
         <pose>0 -0 0.00 0 -0 0</pose>
         <inertial>
-          <mass>10.14395</mass>
+          <mass>1.14395</mass>
           <inertia>
             <ixx>0.126164</ixx>
             <ixy>0</ixy>
@@ -283,7 +283,7 @@
       <link name='left_wheel'>
         <pose>0 0.225 -0.2 -1.5707 0 0</pose>
         <inertial>
-          <mass>10</mass>
+          <mass>1</mass>
           <inertia>
             <ixx>0.01</ixx>
             <ixy>0</ixy>
@@ -326,7 +326,7 @@
       <link name='right_wheel'>
         <pose>0 -0.225 -0.2 -1.5707 0 0</pose>
         <inertial>
-          <mass>10</mass>
+          <mass>1</mass>
           <inertia>
             <ixx>0.01</ixx>
             <ixy>0</ixy>
@@ -369,7 +369,7 @@
       <link name='caster'>
         <pose>-0.2 -0 -0.2 0 -0 0</pose>
         <inertial>
-          <mass>10</mass>
+          <mass>1</mass>
           <inertia>
             <ixx>0.1</ixx>
             <ixy>0</ixy>
@@ -403,7 +403,7 @@
       <link name='caster2'>
         <pose>0.2 -0 -0.2 0 -0 0</pose>
         <inertial>
-          <mass>10</mass>
+          <mass>1</mass>
           <inertia>
             <ixx>0.1</ixx>
             <ixy>0</ixy>

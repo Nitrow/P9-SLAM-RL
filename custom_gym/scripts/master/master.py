@@ -19,7 +19,7 @@ policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=[256, 256, 256])
 
 env = P9RLEnv()
 
-model = DQN(CnnPolicy, env, tensorboard_log='/home/asger/P9/src/custom_gym/scripts', learning_starts=5000, target_update_interval=1000).learn(total_timesteps=2000000)
+model = DQN(CnnPolicy, env, tensorboard_log='/home/asger/P9/src/custom_gym/scripts', learning_starts=500, buffer_size=1000, target_update_interval=100).learn(total_timesteps=200000)
 
 #model = PPO(CnnPolicy, env, verbose=1, batch_size=8, gamma=0.99, learning_rate=0.0001,
          #   tensorboard_log='/home/asger/P9/src/custom_gym/scripts')

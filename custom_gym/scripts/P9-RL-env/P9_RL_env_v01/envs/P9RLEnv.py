@@ -9,6 +9,8 @@ from tf.transformations import quaternion_from_euler
 import actionlib
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal, actionlib_msgs
 import math
+from std_msgs.msg import String
+from std_srvs.srv import Empty
 from gazebo_msgs.msg import ModelState
 from gazebo_msgs.srv import SetModelState
 import sys
@@ -24,10 +26,8 @@ class P9RLEnv(gym.Env):
         self.obsProximityParam = 5
         self.scan_range = []
         rospy.init_node('RLEnv', anonymous=True)
-        self.tf = TransformListener()
         self.position = []
         self.quaternion = []
-        self.pubAction = Twist()
         self.reward = 0
         self.data = []
         self.state = []
@@ -56,7 +56,6 @@ class P9RLEnv(gym.Env):
         horizontal_img = np.array([])
 
 
-        self.pub = rospy.Publisher('/vehicle_blue/cmd_vel', Twist, queue_size=10)
         self.pub2 = rospy.Publisher('/syscommand', String, queue_size=1)
         self.degreeAction = 3.14
 
@@ -76,7 +75,7 @@ class P9RLEnv(gym.Env):
          #                              high=np.array([self.degreeAction]), dtype=np.float16)
 
         self.action_space = spaces.Discrete(4)
-        self.observation_space = spaces.Box(low=0, high=255, shape=(64, 64, 3), dtype=np.uint8)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(224, 224, 1), dtype=np.uint8)
 
 
 
@@ -95,29 +94,31 @@ class P9RLEnv(gym.Env):
 
         if (self.map_width * self.map_height != 0):
             # turn 1D array into 2D array for image
-            map_data = np.reshape(map_data, (self.map_height, self.map_width))
+            map_data = np.reshape(map_data, (self.map_height, self.map_width, 1))
 
             # convert values in costmap
             map_data[map_data == -1] = 150
             map_data[map_data == 100] = 255
             # Add square where robot is
 
-            for i in range(2):
-                for j in range(2):
-                    map_data[int(self.y_in_map) + i, int(self.x_in_map) + j] = 255
+            for i in range(6):
+                for j in range(6):
+                    map_data[int(self.y_in_map-3) + i, int(self.x_in_map-3) + j] = 255
 
-            im = np.array(map_data, dtype=np.uint8)
+            self.img  = np.array(map_data, dtype=np.uint8)
 
-            img =  cv2.cvtColor(im, cv2.COLOR_GRAY2BGR)
+            #self.img = cv2.resize(im, (64, 64, 1))
+
+            #img =  cv2.cvtColor(im, cv2.COLOR_GRAY2BGR)
 
             # resize and flip image
-            self.horizontal_img = cv2.flip(img, 0)
+            #self.horizontal_img = cv2.flip(img, 0)
 
 
            #dim = (256, 256)
 
            # resized = cv2.resize(self.horizontal_img, dim, interpolation=cv2.INTER_AREA)
-            #cv2.imshow('image', self.horizontal_img)
+            #cv2.imshow('image', self.img)
             #cv2.waitKey(2)
 
     def getOdometry(self, data):
@@ -125,8 +126,8 @@ class P9RLEnv(gym.Env):
         self.current_y = data.pose.pose.position.y
 
         # Convert position to be relative to bottom left of map
-        self.x_in_map = (self.current_x + 15) / self.resolution
-        self.y_in_map = (self.current_y + 15) / self.resolution
+        self.x_in_map = (self.current_x + 12) / 0.10000000149011612
+        self.y_in_map = (self.current_y + 12) / 0.10000000149011612
 
 
     def lidar_callback(self, data):
@@ -157,12 +158,12 @@ class P9RLEnv(gym.Env):
         self.pub2.publish("reset")
         self.done = False
 
-        self.rewardMapOld = 98
+        self.rewardMapOld = 2721
 
         self.unpause_proxy()
-        time.sleep(0.1)
+        time.sleep(3)
         self.pause_proxy()
-        state = self.horizontal_img
+        state = self.img
 
         return state
 
@@ -187,21 +188,27 @@ class P9RLEnv(gym.Env):
 
         self.client.wait_for_result()
         self.client.get_result()
-        time.sleep(0.1)
+        rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
         self.pause_proxy()
-        state = self.horizontal_img
+        state = self.img
         reward = self.setReward()
-        if self.TimeoutCounter == 200 or self.minScan < self.collisionParam:
+
+
+        if self.TimeoutCounter == 100:
             self.done = True
+        if self.minScan < self.collisionParam:
+            self.done = True
+            reward = -500
+        print("action: ", action, "reward: ", reward)
 
         return [state, float(reward), self.done, {}]
 
     def setReward(self):
         self.rewardMap = np.sum(np.array(self.map) > -1)
-        if self.rewardMap == self.rewardMapOld:
-            self.reward += -1
-
         self.reward = self.rewardMap - self.rewardMapOld
+        if self.rewardMap <= self.rewardMapOld+100:
+            self.reward = -100
+
         self.rewardMapOld = self.rewardMap
 
         return self.reward
