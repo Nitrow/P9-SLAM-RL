@@ -75,7 +75,7 @@ class P9RLEnv(gym.Env):
          #                              high=np.array([self.degreeAction]), dtype=np.float16)
 
         self.action_space = spaces.Discrete(4)
-        self.observation_space = spaces.Box(low=0, high=255, shape=(224, 224, 1), dtype=np.uint8)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 1), dtype=np.uint8)
 
 
 
@@ -126,8 +126,8 @@ class P9RLEnv(gym.Env):
         self.current_y = data.pose.pose.position.y
 
         # Convert position to be relative to bottom left of map
-        self.x_in_map = (self.current_x + 12) / 0.10000000149011612
-        self.y_in_map = (self.current_y + 12) / 0.10000000149011612
+        self.x_in_map = (self.current_x + 14) / 0.10000000149011612
+        self.y_in_map = (self.current_y + 14) / 0.10000000149011612
 
 
     def lidar_callback(self, data):

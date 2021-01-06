@@ -56,10 +56,10 @@
       <param name="temporalUpdate" value="0.01"/>
       <param name="resampleThreshold" value="0.5"/>
       <param name="particles" value="30"/>
-      <param name="xmin" value="-12"/>
-      <param name="ymin" value="-12"/>
-      <param name="xmax" value="12"/>
-      <param name="ymax" value="12"/>
+      <param name="xmin" value="-14"/>
+      <param name="ymin" value="-14"/>
+      <param name="xmax" value="14"/>
+      <param name="ymax" value="14"/>
       <param name="delta" value="0.1"/>
       <param name="llsamplerange" value="0.01"/>
       <param name="llsamplestep" value="0.01"/>
