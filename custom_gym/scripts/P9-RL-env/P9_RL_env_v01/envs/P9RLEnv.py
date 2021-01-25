@@ -75,7 +75,7 @@ class P9RLEnv(gym.Env):
          #                              high=np.array([self.degreeAction]), dtype=np.float16)
 
         self.action_space = spaces.Discrete(4)
-        self.observation_space = spaces.Box(low=0, high=255, shape=(256, 256, 1), dtype=np.uint8)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(1, 256, 256), dtype=np.uint8)
 
 
 
@@ -94,7 +94,7 @@ class P9RLEnv(gym.Env):
 
         if (self.map_width * self.map_height != 0):
             # turn 1D array into 2D array for image
-            map_data = np.reshape(map_data, (self.map_height, self.map_width, 1))
+            map_data = np.reshape(map_data, (self.map_height, self.map_width))
 
             # convert values in costmap
             map_data[map_data == -1] = 150
@@ -118,8 +118,9 @@ class P9RLEnv(gym.Env):
            #dim = (256, 256)
 
            # resized = cv2.resize(self.horizontal_img, dim, interpolation=cv2.INTER_AREA)
-            #cv2.imshow('image', self.img)
-            #cv2.waitKey(2)
+            #cv2.imwrite('/home/asger/images/test.png', self.img) 
+            cv2.imshow('image', self.img)
+            cv2.waitKey(2)
 
     def getOdometry(self, data):
         self.current_x = data.pose.pose.position.x
@@ -163,7 +164,7 @@ class P9RLEnv(gym.Env):
         self.unpause_proxy()
         time.sleep(3)
         self.pause_proxy()
-        state = self.img
+        state = [1 + self.img]
 
         return state
 
@@ -190,7 +191,7 @@ class P9RLEnv(gym.Env):
         self.client.get_result()
         rospy.wait_for_message("/map", OccupancyGrid, timeout=5)
         self.pause_proxy()
-        state = self.img
+        state = [1 + self.img]
         reward = self.setReward()
 
 
