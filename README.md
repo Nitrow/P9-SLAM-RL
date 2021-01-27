@@ -67,7 +67,7 @@ $ cd custom_gym/scripts/master
 $ python3 master.py
 
 ```
-### Performance after 2000 epsiodes ###
+## Performance after 2000 epsiodes ##
 
 ![DDDQN](graphics/DuelingDDQNAgent_RLSLAM_lr0.0001_2000games.png)
 
