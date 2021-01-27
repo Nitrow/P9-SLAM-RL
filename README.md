@@ -5,7 +5,7 @@
 ---------------
 ## Prerequisites ##
 
-### Install moce_base planner ##
+### Install move_base planner ##
 ```bash
 sudo apt install ros-noetic-move-base
 ```
