@@ -1,6 +1,6 @@
 <launch>
 
-  <arg name="world" default="$(find simulations)/world/empty_wall_world_test"/>
+  <arg name="world" default="$(find simulations)/world/box_wall_world_test"/>
   <!--arg name="world" default="empty"/-->
   <arg name="ign_args" default=""/>
 

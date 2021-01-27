@@ -12,7 +12,7 @@
     args="0 0 0   0 0 0   map vehicle_blue/odom">
   </node>
    -->
-
+ 
 
   <node
     pkg="odom_transform"
@@ -44,9 +44,8 @@
     pkg="ros_ign_bridge"
     type="parameter_bridge"
     name="$(anon ros_ign_bridge)"
-    args="/model/vehicle_blue/cmd_vel@geometry_msgs/Twist]ignition.msgs.Twist /model/vehicle_blue/odometry@nav_msgs/Odometry[ignition.msgs.Odometry /lidar@sensor_msgs/LaserScan[ignition.msgs.LaserScan /world/diff_drive/clock@rosgraph_msgs/Clock[ignition.msgs.Clock">
+    args="/model/vehicle_blue/cmd_vel@geometry_msgs/Twist]ignition.msgs.Twist /model/vehicle_blue/odometry@nav_msgs/Odometry[ignition.msgs.Odometry /lidar@sensor_msgs/LaserScan[ignition.msgs.LaserScan /clock@rosgraph_msgs/Clock[ignition.msgs.Clock /world/diff_drive/dynamic_pose/info@geometry_msgs/Pose[ignition.msgs.Pose">
   </node>
-
 
      <node
     pkg="lidar_modifier"
@@ -61,7 +60,6 @@
 
 
 
-  <remap from="clock" to="/world/diff_drive/clock"/>
   <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping">
       <remap from="scan" to="/lidar"/>
       <param name="odom_frame" value="vehicle_blue/odom" />

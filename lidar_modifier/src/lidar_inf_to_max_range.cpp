@@ -59,8 +59,8 @@ int main(int argc, char **argv) {
 }
 
 lidar_modifier_class::lidar_modifier_class() {
-    ladersub = n.subscribe("/lidar", 50, &lidar_modifier_class::laser_msg_Callback, this);
-    lidar_pub = n.advertise<sensor_msgs::LaserScan>("/scan", 50);
+    ladersub = n.subscribe("laser_back/scan", 50, &lidar_modifier_class::laser_msg_Callback, this);
+    lidar_pub = n.advertise<sensor_msgs::LaserScan>("scan", 50);
 
 }
 

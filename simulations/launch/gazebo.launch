@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<launch>
+        <!-- overwriting these args -->
+        <arg name="debug" default="false" />
+        <arg name="gui" default="true" />
+        <arg name="pause" default="false" />
+        <arg name="world" default="$(find simulations)/world/box_wall_world_test.sdf" />
+
+        <!-- include gazebo_ros launcher -->
+        <include file="$(find gazebo_ros)/launch/empty_world.launch">
+                <arg name="world_name" value="$(arg world)" />
+                <arg name="debug" value="$(arg debug)" />
+                <arg name="gui" value="$(arg gui)" />
+                <arg name="paused" value="$(arg pause)" />
+                <arg name="use_sim_time" value="true" />
+        </include>
+
+  <node
+    pkg="tf2_ros"
+    type="static_transform_publisher" 
+    name="lidar_tf"
+    args="0   0 0.2   0 0 0   vehicle_blue/base_link lidar_link">
+  </node>
+
+
+       <node
+    pkg="lidar_modifier"
+    type="lidar_modifier" 
+    name="lidar_modifier"
+    >
+  </node> 
+
+
+
+ <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping">
+      <remap from="scan" to="/scan"/>
+      <param name="odom_frame" value="vehicle_blue/odom" />
+      <param name="base_frame" value="vehicle_blue/base_link" />
+      <param name="map_update_interval" value="0.1"/>
+      <param name="throttle_scans" value="1"/>
+      <param name="maxUrange" value="3"/>
+      <param name="sigma" value="0.05"/>
+      <param name="kernelSize" value="1"/>
+      <param name="lstep" value="0.05"/>
+      <param name="astep" value="0.05"/>
+      <param name="iterations" value="3"/>
+      <param name="lsigma" value="0.075"/>
+      <param name="ogain" value="3.0"/>
+      <param name="lskip" value="0"/>
+      <param name="srr" value="0"/>
+      <param name="srt" value="0"/>
+      <param name="str" value="0"/>
+      <param name="stt" value="0"/>
+      <param name="linearUpdate" value="0.01"/>
+      <param name="angularUpdate" value="0.01"/>
+      <param name="temporalUpdate" value="0.01"/>
+      <param name="resampleThreshold" value="0.5"/>
+      <param name="particles" value="30"/>
+      <param name="xmin" value="-14"/>
+      <param name="ymin" value="-14"/>
+      <param name="xmax" value="14"/>
+      <param name="ymax" value="14"/>
+      <param name="delta" value="0.1"/>
+      <param name="llsamplerange" value="0.01"/>
+      <param name="llsamplestep" value="0.01"/>
+      <param name="lasamplerange" value="0.005"/>
+      <param name="lasamplestep" value="0.005"/>
+      <param name="transform_publish_period" value="0.1"/>
+      <param name="minimumScore" value="300"/>
+      <param name="maxRange" value="3.5"/>
+      
+
+ </node>
+
+
+ <node
+    type="rviz"
+    name="rviz"
+    pkg="rviz"
+    args="-d $(find simulations)/rviz/lidar2.rviz" />
+</launch>
+
+
