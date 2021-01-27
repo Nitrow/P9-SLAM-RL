@@ -63,7 +63,7 @@ $ roslaunch navigation navigation.launch
 ### Run the trainer ###
 
 ```bash
-$ cd /home/asger/P9/src/custom_gym/scripts/master
+$ cd /custom_gym/scripts/master
 $ python3 master.py
 
 ```
