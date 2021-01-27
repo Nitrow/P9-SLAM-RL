@@ -8,14 +8,14 @@ from P9_RL_env_v01.envs import P9RLEnv
 if __name__ == '__main__':
     env = P9RLEnv()
     best_score = -np.inf
-    load_checkpoint = True
-    n_games = 2000
-    agent = DuelingDDQNAgent(gamma=0.99, epsilon=0.05, lr=0.0001,
+    load_checkpoint = False
+    n_games = 10000
+    agent = DuelingDDQNAgent(gamma=0.99, epsilon=1, lr=0.0001,
                      input_dims=(env.observation_space.shape),
                      n_actions=env.action_space.n, mem_size=5000, eps_min=0.05,
                      batch_size=16, replace=1000, eps_dec=1e-4,
                      chkpt_dir='models/', algo='DuelingDDQNAgent',
-                     env_name='RLSLAM')
+                     env_name='RLSLAM4')
 
     if load_checkpoint:
         agent.load_models()
