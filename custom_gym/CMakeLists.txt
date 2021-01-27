@@ -49,31 +49,6 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * uncomment the generate_messages entry below
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
-## Generate messages in the 'msg' folder
- add_message_files(
-   FILES
-   Num.msg
- )
-
-## Generate services in the 'srv' folder
- add_service_files(
-   FILES
-   StepFunction.srv
-   spawner.srv
- )
-
-## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
-
-## Generate added messages and services with any dependencies listed here
- generate_messages(
-   DEPENDENCIES
-   std_msgs  # Or other packages containing msgs
- )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -165,6 +140,10 @@ include_directories(
  catkin_install_python(PROGRAMS
    scripts/P9-RL-env/P9_RL_env_v01/envs/P9RLEnv.py
    scripts/master/master.py
+   scripts/master/deep_q_network.py
+   scripts/master/dueling_ddqn_agent.py
+   scripts/master/replay_memory.py
+   scripts/master/utils.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 

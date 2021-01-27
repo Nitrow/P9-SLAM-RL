@@ -119,8 +119,8 @@ class P9RLEnv(gym.Env):
 
            # resized = cv2.resize(self.horizontal_img, dim, interpolation=cv2.INTER_AREA)
             #cv2.imwrite('/home/asger/images/test.png', self.img) 
-            cv2.imshow('image', self.img)
-            cv2.waitKey(2)
+            #cv2.imshow('image', self.img)
+            #cv2.waitKey(2)
 
     def getOdometry(self, data):
         self.current_x = data.pose.pose.position.x
@@ -209,7 +209,7 @@ class P9RLEnv(gym.Env):
         self.reward = self.rewardMap - self.rewardMapOld
         if self.rewardMap <= self.rewardMapOld+100:
             self.reward = -100
-
+        
         self.rewardMapOld = self.rewardMap
 
         return self.reward
