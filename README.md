@@ -1,26 +1,23 @@
 # P9-SLAM-RL #
 ### Ubuntu 20.04 ###
 ### ROS Noetic ###
-### Ignition Dome ###
-### Stable Baselines3 ###
+### Gazebo 11.3.0 ###
 ---------------
 ## Prerequisites ##
-### Install Ignition Dome ###
+
+### Install moce_base planner ##
 ```bash
-sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
-wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
-sudo apt-get update
-sudo apt-get install ignition-dome
+sudo apt install ros-noetic-move-base
 ```
 
-### Install gmapping ##
+### Install global planner ##
 ```bash
-sudo apt-get install ros-noetic-gmapping
+sudo apt install ros-noetic-global-planner
 ```
 
-### Install Stable Baselines3 ###
+### Install local planner ##
 ```bash
-pip3 install stable-baselines3[extra]
+sudo apt install ros-noetic-teb-local-planner
 ```
 
 ## Installation ##
@@ -33,7 +30,7 @@ $ git clone https://github.com/Nitrow/P9-SLAM-RL .
 
 $ cd ..
 
-$ catkin_make
+$ catkin_make -DCMAKE_BUILD_TYPE=Release
 ```
 
 ### How to install the gym environment ###
@@ -54,7 +51,7 @@ $ sudo pip3 install -e .
 ### Run the simulation ###
 
 ```bash
-$ roslaunch simulation lidar.launch
+$ roslaunch simulation gazebo.launch
 ```
 
 ### Run the navigation ###
@@ -66,7 +63,8 @@ $ roslaunch navigation navigation.launch
 ### Run the trainer ###
 
 ```bash
-$ roslaunch custom_gym RL_learner.launch 
+$ cd /home/asger/P9/src/custom_gym/scripts/master
+$ python3 master.py
 
 ```
 
