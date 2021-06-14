@@ -71,3 +71,5 @@ $ python3 master.py
 
 ![DDDQN](graphics/DuelingDDQNAgent_RLSLAM_lr0.0001_2000games.png)
 
+A video can be found at: https://youtu.be/u79M53lfclU
+
